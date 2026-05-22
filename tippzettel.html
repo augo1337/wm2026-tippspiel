@@ -139,7 +139,9 @@ input  { font-family: inherit; }
 .ko-match-lbl .pts { color: var(--text3); }
 .ko-date { color: #4a90a4; font-weight: 600; }
 .mtime { color: var(--text2); font-size: .78em; font-weight: 400; }
-.mrow.de-match { background: linear-gradient(90deg,rgba(245,197,24,.22) 0%,rgba(245,197,24,.06) 55%,transparent 100%); border-left: 4px solid #f5c518; padding-left: 4px; box-shadow: inset 0 0 14px rgba(245,197,24,.09); }
+.mrow.de-match { background: linear-gradient(90deg,rgba(245,197,24,.30) 0%,rgba(245,197,24,.09) 55%,transparent 100%); border-left: 5px solid #f5c518; padding-left: 4px; box-shadow: inset 0 0 16px rgba(245,197,24,.12); }
+.ko-match.de-ko { border-color: #f5c518; border-left: 4px solid #f5c518; background: linear-gradient(135deg,rgba(245,197,24,.13) 0%,var(--card) 50%); box-shadow: 0 0 0 1px rgba(245,197,24,.22), inset 0 0 20px rgba(245,197,24,.07); }
+.ko-match.de-ko .ko-match-lbl { background: linear-gradient(90deg,rgba(245,197,24,.14) 0%,var(--card2) 100%); }
 .ko-match-teams { display: flex; min-height: 56px; }
 .ko-team { flex: 1; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; padding: 10px 8px;
@@ -634,7 +636,8 @@ function renderKo() {
         const winner   = koPick[round.id][mi];
         const decided  = winner !== null;
         const pendingQ = tA.team === '?' || tB.team === '?';
-        html += `<div class="ko-match${decided?' decided':''}">
+        const isDeKo   = tA.team === 'Deutschland' || tB.team === 'Deutschland';
+        html += `<div class="ko-match${decided?' decided':''}${isDeKo?' de-ko':''}">
           <div class="ko-match-lbl">
             <span>Spiel ${mi+1}</span>
             <span class="ko-date">${round.dates?.[mi] ?? ''}${round.times?.[mi] ? ' '+round.times[mi]+' Uhr' : ''}</span>
