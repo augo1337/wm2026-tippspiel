@@ -36,7 +36,8 @@ input  { font-family: inherit; }
 .hdr { background: linear-gradient(135deg, #0d2540 0%, #071628 60%, #0d2540 100%);
   border-bottom: 2px solid var(--gold2); padding: 16px 24px;
   display: flex; align-items: center; gap: 16px; }
-.hdr-logo { font-size: 2.4rem; line-height: 1; filter: drop-shadow(0 2px 6px #000a); }
+.hdr-logo { height: 64px; width: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); flex-shrink: 0; }
+.hdr-mascot { height: 72px; width: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,.5)); flex-shrink: 0; margin-left: auto; }
 .hdr-title { font-size: 1.65rem; font-weight: 800; color: var(--gold);
   letter-spacing: .5px; line-height: 1.2; }
 .hdr-sub { color: var(--text2); font-size: .82rem; margin-top: 3px; }
@@ -199,11 +200,12 @@ input  { font-family: inherit; }
 <body>
 
 <header class="hdr">
-  <div class="hdr-logo">⚽</div>
+  <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div>
     <div class="hdr-title">WM 2026 Tippspiel</div>
     <div class="hdr-sub">USA · Kanada · Mexiko &nbsp;·&nbsp; 11. Juni – 19. Juli 2026</div>
   </div>
+  <img class="hdr-mascot" src="https://upload.wikimedia.org/wikipedia/en/thumb/7/77/2026_FIFA_World_Cup_Mascots_small.jpg/180px-2026_FIFA_World_Cup_Mascots_small.jpg" alt="WM 2026 Maskottchen">
 </header>
 
 <div class="namebar">
