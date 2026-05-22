@@ -344,19 +344,20 @@ const S16_PAIRS = [
   [10,31],  // Sp.15: 03.07. – 1K vs Dritter
   [15,18],  // Sp.16: 03.07. – 2D vs 2G
 ];
-const S16_DATES = [
-  "28.06.","29.06.","29.06.","29.06.",
-  "30.06.","30.06.","30.06.",
-  "01.07.","01.07.","01.07.",
-  "02.07.","02.07.","02.07.",
-  "03.07.","03.07.","03.07.",
-];
 const KO_ROUNDS = [
-  {id:"S16",label:"Sechzehntelfinale",pts:3,  n:16, dateRange:"28.06.–03.07."},
-  {id:"S8", label:"Achtelfinale",     pts:5,  n:8,  dateRange:"05.–07.07."},
-  {id:"VF", label:"Viertelfinale",    pts:10, n:4,  dateRange:"10.–11.07."},
-  {id:"HF", label:"Halbfinale",       pts:15, n:2,  dateRange:"14.–15.07."},
-  {id:"F",  label:"Finale",           pts:20, n:1,  dateRange:"19.07."},
+  {id:"S16",label:"Sechzehntelfinale",pts:3,  n:16, dates:[
+    "28.06.","29.06.","29.06.","29.06.",
+    "30.06.","30.06.","30.06.",
+    "01.07.","01.07.","01.07.",
+    "02.07.","02.07.","02.07.",
+    "03.07.","03.07.","03.07."]},
+  {id:"S8", label:"Achtelfinale",     pts:5,  n:8,  dates:[
+    "05.07.","05.07.","06.07.","06.07.",
+    "07.07.","07.07.","08.07.","08.07."]},
+  {id:"VF", label:"Viertelfinale",    pts:10, n:4,  dates:[
+    "10.07.","10.07.","11.07.","11.07."]},
+  {id:"HF", label:"Halbfinale",       pts:15, n:2,  dates:["14.07.","15.07."]},
+  {id:"F",  label:"Finale",           pts:20, n:1,  dates:["19.07."]},
 ];
 const ROUND_IDS = KO_ROUNDS.map(r => r.id);
 
@@ -600,7 +601,7 @@ function renderKo() {
     html += `<div class="ko-section">
       <div class="ko-section-hdr">
         <span class="ko-section-title">${round.label}</span>
-        <span class="ko-section-meta">${ptsLabel} · <span style="color:#4a90a4">${round.dateRange}</span> · <span style="color:${done?'#27ae60':'#7a9bbe'}">${wins}/${round.n} Gewinner</span></span>
+        <span class="ko-section-meta">${ptsLabel} · <span style="color:#4a90a4">${round.dates[0]}${round.dates.length>1?'–'+round.dates[round.dates.length-1]:''}</span> · <span style="color:${done?'#27ae60':'#7a9bbe'}">${wins}/${round.n} Gewinner</span></span>
       </div>`;
 
     // Check if this round is playable (all previous round winners filled)
@@ -623,7 +624,7 @@ function renderKo() {
         html += `<div class="ko-match${decided?' decided':''}">
           <div class="ko-match-lbl">
             <span>Spiel ${mi+1}</span>
-            <span class="ko-date">${round.id==='S16' ? S16_DATES[mi] : ''}</span>
+            <span class="ko-date">${round.dates?.[mi] ?? ''}</span>
             <span class="pts">${round.id === 'F' ? '20+25 Pkt' : round.pts + ' Pkt'}</span>
           </div>
           <div class="ko-match-teams">
