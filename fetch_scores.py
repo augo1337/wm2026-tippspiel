@@ -220,8 +220,8 @@ def main():
     # Tipps-Ordner prüfen
     if not TIPPS_ORDNER.exists() or not list(TIPPS_ORDNER.glob("*.json")):
         print(f"\nHINWEIS: Keine JSON-Tipps in '{TIPPS_ORDNER}' gefunden.")
-        print("Bitte Tipp-Dateien der Teilnehmer dort ablegen.")
-        sys.exit(1)
+        print("Workflow wartet auf Tipp-Dateien – kein Fehler.")
+        sys.exit(0)
 
     # Ergebnisse abrufen
     print("\nHole Ergebnisse von football-data.org ...")
