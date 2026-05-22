@@ -1,0 +1,18 @@
+# Credentials – niemals committen
+service_account.json
+credentials.json
+token.json
+
+# Generierte Ausgaben
+Rangliste_*.html
+Rangliste_*.xlsx
+Ergebnisse_Demo.xlsx
+Tipps_Demo/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Excel temporär
+~$*
