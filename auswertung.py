@@ -645,6 +645,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#07101f;color:#d0e0f
 .ko-sec-title{font-size:.75rem;font-weight:700;color:#7a9bbe;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
 .ko-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
 .ko-rname{width:135px;font-size:.75rem;color:#546e7a;font-weight:600;text-transform:uppercase;padding-top:3px;flex-shrink:0}
+.ko-rdate{font-size:.68rem;color:#37474f;font-weight:400;text-transform:none}
 .ko-teams{display:flex;flex-wrap:wrap;gap:5px}
 .kt{padding:2px 10px;border-radius:12px;font-size:.75rem;background:#0d1c30;border:1px solid #1c3350;color:#d0e0f0}
 .kt.hit{background:#1b5e20;border-color:#2e7d32;color:#a5d6a7}.kt.miss{background:#3e0000;border-color:#b71c1c;color:#ef9a9a}
@@ -656,8 +657,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#07101f;color:#d0e0f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["S16","Sechzehntelfinale"],["S8","Achtelfinale"],
-  ["VF","Viertelfinale"],["HF","Halbfinale"],["F","Finale"],["WM","Weltmeister"]];
+const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–03.07."],["S8","Achtelfinale","05.–07.07."],
+  ["VF","Viertelfinale","10.–11.07."],["HF","Halbfinale","14.–15.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set();
 
 function badge(pts){
@@ -761,7 +762,7 @@ function renderDetails(){
         <td>${badge(hasRes?s.punkte:null)}</td>
       </tr>`;
     }).join("");
-    const koRows=KO_ROUNDS.map(([runde,label])=>{
+    const koRows=KO_ROUNDS.map(([runde,label,datum])=>{
       const tips=p.ko_tipps[runde];
       const actual=DATA.ko[runde]||[];
       let teamsHtml;
@@ -779,7 +780,7 @@ function renderDetails(){
         }).join("");
       }
       return `<div class="ko-row">
-        <div class="ko-rname">${label}</div>
+        <div class="ko-rname">${label}${datum?`<span class="ko-rdate"> · ${datum}</span>`:""}</div>
         <div class="ko-teams">${teamsHtml}</div>
       </div>`;
     }).join("");
