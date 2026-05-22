@@ -9,18 +9,18 @@
 /* ── Reset & base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg:       #07101f;
-  --card:     #0d1c30;
-  --card2:    #111f35;
-  --border:   #1c3350;
-  --border2:  #263f5a;
+  --bg:       #152438;
+  --card:     #1c3450;
+  --card2:    #203a5a;
+  --border:   #2e4e72;
+  --border2:  #3a5f84;
   --gold:     #f5c518;
   --gold2:    #c9a010;
   --blue1:    #1a6ec7;
   --blue2:    #4fa3e0;
-  --text:     #d8e8f8;
-  --text2:    #7a9bbe;
-  --text3:    #48637a;
+  --text:     #eef5fd;
+  --text2:    #a0c0de;
+  --text3:    #7a9bbe;
   --green:    #27ae60;
   --orange:   #e67e22;
   --red:      #c0392b;
@@ -28,12 +28,12 @@
 }
 html { scroll-behavior: smooth; }
 body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+  background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
 button { font-family: inherit; cursor: pointer; }
 input  { font-family: inherit; }
 
 /* ── Header ── */
-.hdr { background: linear-gradient(135deg, #0d2540 0%, #071628 60%, #0d2540 100%);
+.hdr { background: linear-gradient(135deg, #1e3f60 0%, #0e2848 60%, #1e3f60 100%);
   border-bottom: 2px solid var(--gold2); padding: 16px 24px;
   display: flex; align-items: center; gap: 16px; }
 .hdr-logo { height: 64px; width: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); flex-shrink: 0; }
@@ -43,7 +43,7 @@ input  { font-family: inherit; }
 .hdr-sub { color: var(--text2); font-size: .82rem; margin-top: 3px; }
 
 /* ── Name bar ── */
-.namebar { background: #0a1828; border-bottom: 1px solid var(--border);
+.namebar { background: #182d45; border-bottom: 1px solid var(--border);
   padding: 10px 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .namebar label { color: var(--text2); font-size: .85rem; white-space: nowrap; }
 .name-input { flex: 1; min-width: 180px; max-width: 320px;
@@ -57,7 +57,7 @@ input  { font-family: inherit; }
   height: 100%; border-radius: 99px; transition: width .35s ease; }
 
 /* ── Tabs ── */
-.tabs { display: flex; background: #080f1e; border-bottom: 2px solid var(--border);
+.tabs { display: flex; background: #0e1e36; border-bottom: 2px solid var(--border);
   padding: 0 16px; overflow-x: auto; gap: 2px; }
 .tab { padding: 11px 20px; background: none; border: none;
   border-bottom: 3px solid transparent; margin-bottom: -2px;
@@ -74,7 +74,7 @@ input  { font-family: inherit; }
 
 /* ── Group card ── */
 .grp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.grp-head { background: linear-gradient(90deg, #1a3a60, #0f2540);
+.grp-head { background: linear-gradient(90deg, #2a4e78, #1a3a5c);
   padding: 9px 14px; display: flex; justify-content: space-between; align-items: center; }
 .grp-head-name { font-weight: 700; color: var(--gold); font-size: 1rem; letter-spacing: .5px; }
 .grp-head-stat { font-size: .75rem; color: var(--text3); }
