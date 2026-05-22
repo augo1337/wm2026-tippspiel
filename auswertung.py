@@ -846,7 +846,7 @@ renderAll();
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
   <div class="hdr-sub">Stand: {ts} · {filled}/72 Gruppenspiele</div></div>
-  <img class="hdr-mascot" src="https://upload.wikimedia.org/wikipedia/en/thumb/7/77/2026_FIFA_World_Cup_Mascots_small.jpg/180px-2026_FIFA_World_Cup_Mascots_small.jpg" alt="WM 2026 Maskottchen">
+  <img class="hdr-mascot" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Copa_Mundial_de_F%C3%BAtbol_de_2026_-_Mascota_del_Gobierno_de_la_Ciudad_de_M%C3%A9xico.jpg/200px-Copa_Mundial_de_F%C3%BAtbol_de_2026_-_Mascota_del_Gobierno_de_la_Ciudad_de_M%C3%A9xico.jpg" alt="WM 2026 Maskottchen">
 </div>
 <div class="stats">
   <div class="stat-box"><div class="stat-val">{n}</div><div class="stat-lbl">Teilnehmer</div></div>
