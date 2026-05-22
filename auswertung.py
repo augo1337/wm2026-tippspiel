@@ -646,7 +646,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#07101f;color:#d0e0f
 .ko-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
 .ko-rname{width:135px;font-size:.75rem;color:#546e7a;font-weight:600;text-transform:uppercase;padding-top:3px;flex-shrink:0}
 .ko-rdate{font-size:.68rem;color:#37474f;font-weight:400;text-transform:none}
-.de-row td{background:rgba(245,197,24,.07)!important;border-left:2px solid #f5c518}
+.de-row td{background:rgba(245,197,24,.13)!important;border-left:3px solid #f5c518}
+.de-row{box-shadow:inset 0 0 12px rgba(245,197,24,.07)}
 .ko-teams{display:flex;flex-wrap:wrap;gap:5px}
 .kt{padding:2px 10px;border-radius:12px;font-size:.75rem;background:#0d1c30;border:1px solid #1c3350;color:#d0e0f0}
 .kt.hit{background:#1b5e20;border-color:#2e7d32;color:#a5d6a7}.kt.miss{background:#3e0000;border-color:#b71c1c;color:#ef9a9a}
