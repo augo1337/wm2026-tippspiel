@@ -138,6 +138,8 @@ input  { font-family: inherit; }
   font-size: .72rem; color: var(--text3); display: flex; justify-content: space-between; }
 .ko-match-lbl .pts { color: var(--text3); }
 .ko-date { color: #4a90a4; font-weight: 600; }
+.mtime { color: var(--text2); font-size: .78em; font-weight: 400; }
+.mrow.de-match { background: linear-gradient(90deg,rgba(245,197,24,.10) 0%,transparent 100%); border-left: 3px solid #f5c518; padding-left: 4px; }
 .ko-match-teams { display: flex; min-height: 56px; }
 .ko-team { flex: 1; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; padding: 10px 8px;
@@ -232,78 +234,78 @@ input  { font-family: inherit; }
 // DATEN
 // ═══════════════════════════════════════════════════════════════════
 const MATCHES = [
-  {id:"A1",d:"11.06.",h:"Mexiko",a:"Südafrika",g:"A"},
-  {id:"A2",d:"11.06.",h:"Südkorea",a:"Tschechien",g:"A"},
-  {id:"A3",d:"18.06.",h:"Tschechien",a:"Südafrika",g:"A"},
-  {id:"A4",d:"18.06.",h:"Mexiko",a:"Südkorea",g:"A"},
-  {id:"A5",d:"24.06.",h:"Tschechien",a:"Mexiko",g:"A"},
-  {id:"A6",d:"24.06.",h:"Südafrika",a:"Südkorea",g:"A"},
-  {id:"B1",d:"12.06.",h:"Kanada",a:"Bosnien-Herzegowina",g:"B"},
-  {id:"B2",d:"13.06.",h:"Katar",a:"Schweiz",g:"B"},
-  {id:"B3",d:"18.06.",h:"Schweiz",a:"Bosnien-Herzegowina",g:"B"},
-  {id:"B4",d:"18.06.",h:"Kanada",a:"Katar",g:"B"},
-  {id:"B5",d:"24.06.",h:"Schweiz",a:"Kanada",g:"B"},
-  {id:"B6",d:"24.06.",h:"Bosnien-Herzegowina",a:"Katar",g:"B"},
-  {id:"C1",d:"13.06.",h:"Brasilien",a:"Marokko",g:"C"},
-  {id:"C2",d:"13.06.",h:"Haiti",a:"Schottland",g:"C"},
-  {id:"C3",d:"19.06.",h:"Schottland",a:"Marokko",g:"C"},
-  {id:"C4",d:"19.06.",h:"Brasilien",a:"Haiti",g:"C"},
-  {id:"C5",d:"24.06.",h:"Schottland",a:"Brasilien",g:"C"},
-  {id:"C6",d:"24.06.",h:"Marokko",a:"Haiti",g:"C"},
-  {id:"D1",d:"12.06.",h:"USA",a:"Paraguay",g:"D"},
-  {id:"D2",d:"13.06.",h:"Australien",a:"Türkei",g:"D"},
-  {id:"D3",d:"19.06.",h:"USA",a:"Australien",g:"D"},
-  {id:"D4",d:"19.06.",h:"Türkei",a:"Paraguay",g:"D"},
-  {id:"D5",d:"25.06.",h:"Türkei",a:"USA",g:"D"},
-  {id:"D6",d:"25.06.",h:"Paraguay",a:"Australien",g:"D"},
-  {id:"E1",d:"14.06.",h:"Deutschland",a:"Curaçao",g:"E"},
-  {id:"E2",d:"14.06.",h:"Elfenbeinküste",a:"Ecuador",g:"E"},
-  {id:"E3",d:"20.06.",h:"Deutschland",a:"Elfenbeinküste",g:"E"},
-  {id:"E4",d:"20.06.",h:"Ecuador",a:"Curaçao",g:"E"},
-  {id:"E5",d:"25.06.",h:"Curaçao",a:"Elfenbeinküste",g:"E"},
-  {id:"E6",d:"25.06.",h:"Ecuador",a:"Deutschland",g:"E"},
-  {id:"F1",d:"14.06.",h:"Niederlande",a:"Japan",g:"F"},
-  {id:"F2",d:"14.06.",h:"Schweden",a:"Tunesien",g:"F"},
-  {id:"F3",d:"20.06.",h:"Niederlande",a:"Schweden",g:"F"},
-  {id:"F4",d:"20.06.",h:"Tunesien",a:"Japan",g:"F"},
-  {id:"F5",d:"25.06.",h:"Japan",a:"Schweden",g:"F"},
-  {id:"F6",d:"25.06.",h:"Tunesien",a:"Niederlande",g:"F"},
-  {id:"G1",d:"15.06.",h:"Belgien",a:"Ägypten",g:"G"},
-  {id:"G2",d:"15.06.",h:"Iran",a:"Neuseeland",g:"G"},
-  {id:"G3",d:"21.06.",h:"Belgien",a:"Iran",g:"G"},
-  {id:"G4",d:"21.06.",h:"Neuseeland",a:"Ägypten",g:"G"},
-  {id:"G5",d:"26.06.",h:"Ägypten",a:"Iran",g:"G"},
-  {id:"G6",d:"26.06.",h:"Neuseeland",a:"Belgien",g:"G"},
-  {id:"H1",d:"15.06.",h:"Spanien",a:"Kap Verde",g:"H"},
-  {id:"H2",d:"15.06.",h:"Saudi-Arabien",a:"Uruguay",g:"H"},
-  {id:"H3",d:"21.06.",h:"Spanien",a:"Saudi-Arabien",g:"H"},
-  {id:"H4",d:"21.06.",h:"Uruguay",a:"Kap Verde",g:"H"},
-  {id:"H5",d:"26.06.",h:"Kap Verde",a:"Saudi-Arabien",g:"H"},
-  {id:"H6",d:"26.06.",h:"Uruguay",a:"Spanien",g:"H"},
-  {id:"I1",d:"16.06.",h:"Frankreich",a:"Senegal",g:"I"},
-  {id:"I2",d:"16.06.",h:"Irak",a:"Norwegen",g:"I"},
-  {id:"I3",d:"22.06.",h:"Frankreich",a:"Irak",g:"I"},
-  {id:"I4",d:"22.06.",h:"Norwegen",a:"Senegal",g:"I"},
-  {id:"I5",d:"26.06.",h:"Norwegen",a:"Frankreich",g:"I"},
-  {id:"I6",d:"26.06.",h:"Senegal",a:"Irak",g:"I"},
-  {id:"J1",d:"16.06.",h:"Argentinien",a:"Algerien",g:"J"},
-  {id:"J2",d:"16.06.",h:"Österreich",a:"Jordanien",g:"J"},
-  {id:"J3",d:"22.06.",h:"Argentinien",a:"Österreich",g:"J"},
-  {id:"J4",d:"22.06.",h:"Jordanien",a:"Algerien",g:"J"},
-  {id:"J5",d:"27.06.",h:"Algerien",a:"Österreich",g:"J"},
-  {id:"J6",d:"27.06.",h:"Jordanien",a:"Argentinien",g:"J"},
-  {id:"K1",d:"17.06.",h:"Portugal",a:"DR Kongo",g:"K"},
-  {id:"K2",d:"17.06.",h:"Usbekistan",a:"Kolumbien",g:"K"},
-  {id:"K3",d:"23.06.",h:"Portugal",a:"Usbekistan",g:"K"},
-  {id:"K4",d:"23.06.",h:"Kolumbien",a:"DR Kongo",g:"K"},
-  {id:"K5",d:"27.06.",h:"Kolumbien",a:"Portugal",g:"K"},
-  {id:"K6",d:"27.06.",h:"DR Kongo",a:"Usbekistan",g:"K"},
-  {id:"L1",d:"17.06.",h:"England",a:"Kroatien",g:"L"},
-  {id:"L2",d:"17.06.",h:"Ghana",a:"Panama",g:"L"},
-  {id:"L3",d:"23.06.",h:"England",a:"Ghana",g:"L"},
-  {id:"L4",d:"23.06.",h:"Panama",a:"Kroatien",g:"L"},
-  {id:"L5",d:"27.06.",h:"Panama",a:"England",g:"L"},
-  {id:"L6",d:"27.06.",h:"Kroatien",a:"Ghana",g:"L"},
+  {id:"A1",d:"11.06.",t:"21:00",h:"Mexiko",a:"Südafrika",g:"A"},
+  {id:"A2",d:"12.06.",t:"04:00",h:"Südkorea",a:"Tschechien",g:"A"},
+  {id:"A3",d:"18.06.",t:"18:00",h:"Tschechien",a:"Südafrika",g:"A"},
+  {id:"A4",d:"19.06.",t:"03:00",h:"Mexiko",a:"Südkorea",g:"A"},
+  {id:"A5",d:"25.06.",t:"03:00",h:"Tschechien",a:"Mexiko",g:"A"},
+  {id:"A6",d:"25.06.",t:"03:00",h:"Südafrika",a:"Südkorea",g:"A"},
+  {id:"B1",d:"12.06.",t:"21:00",h:"Kanada",a:"Bosnien-Herzegowina",g:"B"},
+  {id:"B2",d:"13.06.",t:"21:00",h:"Katar",a:"Schweiz",g:"B"},
+  {id:"B3",d:"18.06.",t:"21:00",h:"Schweiz",a:"Bosnien-Herzegowina",g:"B"},
+  {id:"B4",d:"19.06.",t:"00:00",h:"Kanada",a:"Katar",g:"B"},
+  {id:"B5",d:"24.06.",t:"21:00",h:"Schweiz",a:"Kanada",g:"B"},
+  {id:"B6",d:"24.06.",t:"21:00",h:"Bosnien-Herzegowina",a:"Katar",g:"B"},
+  {id:"C1",d:"14.06.",t:"00:00",h:"Brasilien",a:"Marokko",g:"C"},
+  {id:"C2",d:"14.06.",t:"03:00",h:"Haiti",a:"Schottland",g:"C"},
+  {id:"C3",d:"20.06.",t:"00:00",h:"Schottland",a:"Marokko",g:"C"},
+  {id:"C4",d:"20.06.",t:"02:30",h:"Brasilien",a:"Haiti",g:"C"},
+  {id:"C5",d:"25.06.",t:"00:00",h:"Schottland",a:"Brasilien",g:"C"},
+  {id:"C6",d:"25.06.",t:"00:00",h:"Marokko",a:"Haiti",g:"C"},
+  {id:"D1",d:"13.06.",t:"03:00",h:"USA",a:"Paraguay",g:"D"},
+  {id:"D2",d:"14.06.",t:"06:00",h:"Australien",a:"Türkei",g:"D"},
+  {id:"D3",d:"19.06.",t:"21:00",h:"USA",a:"Australien",g:"D"},
+  {id:"D4",d:"20.06.",t:"05:00",h:"Türkei",a:"Paraguay",g:"D"},
+  {id:"D5",d:"26.06.",t:"04:00",h:"Türkei",a:"USA",g:"D"},
+  {id:"D6",d:"26.06.",t:"04:00",h:"Paraguay",a:"Australien",g:"D"},
+  {id:"E1",d:"14.06.",t:"19:00",h:"Deutschland",a:"Curaçao",g:"E"},
+  {id:"E2",d:"15.06.",t:"01:00",h:"Elfenbeinküste",a:"Ecuador",g:"E"},
+  {id:"E3",d:"20.06.",t:"22:00",h:"Deutschland",a:"Elfenbeinküste",g:"E"},
+  {id:"E4",d:"21.06.",t:"02:00",h:"Ecuador",a:"Curaçao",g:"E"},
+  {id:"E5",d:"25.06.",t:"22:00",h:"Curaçao",a:"Elfenbeinküste",g:"E"},
+  {id:"E6",d:"25.06.",t:"22:00",h:"Ecuador",a:"Deutschland",g:"E"},
+  {id:"F1",d:"14.06.",t:"22:00",h:"Niederlande",a:"Japan",g:"F"},
+  {id:"F2",d:"15.06.",t:"04:00",h:"Schweden",a:"Tunesien",g:"F"},
+  {id:"F3",d:"20.06.",t:"19:00",h:"Niederlande",a:"Schweden",g:"F"},
+  {id:"F4",d:"21.06.",t:"06:00",h:"Tunesien",a:"Japan",g:"F"},
+  {id:"F5",d:"26.06.",t:"01:00",h:"Japan",a:"Schweden",g:"F"},
+  {id:"F6",d:"26.06.",t:"01:00",h:"Tunesien",a:"Niederlande",g:"F"},
+  {id:"G1",d:"15.06.",t:"21:00",h:"Belgien",a:"Ägypten",g:"G"},
+  {id:"G2",d:"16.06.",t:"03:00",h:"Iran",a:"Neuseeland",g:"G"},
+  {id:"G3",d:"21.06.",t:"21:00",h:"Belgien",a:"Iran",g:"G"},
+  {id:"G4",d:"22.06.",t:"03:00",h:"Neuseeland",a:"Ägypten",g:"G"},
+  {id:"G5",d:"27.06.",t:"05:00",h:"Ägypten",a:"Iran",g:"G"},
+  {id:"G6",d:"27.06.",t:"05:00",h:"Neuseeland",a:"Belgien",g:"G"},
+  {id:"H1",d:"15.06.",t:"18:00",h:"Spanien",a:"Kap Verde",g:"H"},
+  {id:"H2",d:"16.06.",t:"00:00",h:"Saudi-Arabien",a:"Uruguay",g:"H"},
+  {id:"H3",d:"21.06.",t:"18:00",h:"Spanien",a:"Saudi-Arabien",g:"H"},
+  {id:"H4",d:"22.06.",t:"00:00",h:"Uruguay",a:"Kap Verde",g:"H"},
+  {id:"H5",d:"27.06.",t:"02:00",h:"Kap Verde",a:"Saudi-Arabien",g:"H"},
+  {id:"H6",d:"27.06.",t:"02:00",h:"Uruguay",a:"Spanien",g:"H"},
+  {id:"I1",d:"16.06.",t:"21:00",h:"Frankreich",a:"Senegal",g:"I"},
+  {id:"I2",d:"17.06.",t:"00:00",h:"Irak",a:"Norwegen",g:"I"},
+  {id:"I3",d:"22.06.",t:"23:00",h:"Frankreich",a:"Irak",g:"I"},
+  {id:"I4",d:"23.06.",t:"02:00",h:"Norwegen",a:"Senegal",g:"I"},
+  {id:"I5",d:"26.06.",t:"21:00",h:"Norwegen",a:"Frankreich",g:"I"},
+  {id:"I6",d:"26.06.",t:"21:00",h:"Senegal",a:"Irak",g:"I"},
+  {id:"J1",d:"17.06.",t:"03:00",h:"Argentinien",a:"Algerien",g:"J"},
+  {id:"J2",d:"17.06.",t:"06:00",h:"Österreich",a:"Jordanien",g:"J"},
+  {id:"J3",d:"22.06.",t:"19:00",h:"Argentinien",a:"Österreich",g:"J"},
+  {id:"J4",d:"23.06.",t:"05:00",h:"Jordanien",a:"Algerien",g:"J"},
+  {id:"J5",d:"28.06.",t:"04:00",h:"Algerien",a:"Österreich",g:"J"},
+  {id:"J6",d:"28.06.",t:"04:00",h:"Jordanien",a:"Argentinien",g:"J"},
+  {id:"K1",d:"17.06.",t:"19:00",h:"Portugal",a:"DR Kongo",g:"K"},
+  {id:"K2",d:"18.06.",t:"04:00",h:"Usbekistan",a:"Kolumbien",g:"K"},
+  {id:"K3",d:"23.06.",t:"19:00",h:"Portugal",a:"Usbekistan",g:"K"},
+  {id:"K4",d:"24.06.",t:"04:00",h:"Kolumbien",a:"DR Kongo",g:"K"},
+  {id:"K5",d:"28.06.",t:"01:30",h:"Kolumbien",a:"Portugal",g:"K"},
+  {id:"K6",d:"28.06.",t:"01:30",h:"DR Kongo",a:"Usbekistan",g:"K"},
+  {id:"L1",d:"17.06.",t:"22:00",h:"England",a:"Kroatien",g:"L"},
+  {id:"L2",d:"18.06.",t:"01:00",h:"Ghana",a:"Panama",g:"L"},
+  {id:"L3",d:"23.06.",t:"22:00",h:"England",a:"Ghana",g:"L"},
+  {id:"L4",d:"24.06.",t:"01:00",h:"Panama",a:"Kroatien",g:"L"},
+  {id:"L5",d:"27.06.",t:"23:00",h:"Panama",a:"England",g:"L"},
+  {id:"L6",d:"27.06.",t:"23:00",h:"Kroatien",a:"Ghana",g:"L"},
 ];
 const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 const FLAGS = {
@@ -329,37 +331,45 @@ function flag(name) {
 // qualifiers[0..11] = 1.A..1.L, [12..23] = 2.A..2.L, [24..31] = beste 8 Dritte
 // Offizielles FIFA-Bracket: Sieger spielen gegen Dritte, nicht Dritte gegen Dritte
 const S16_PAIRS = [
-  [12,13],  // Sp.1:  28.06. – 2A vs 2B
-  [4, 24],  // Sp.2:  29.06. – 1E vs Dritter
-  [5, 14],  // Sp.3:  29.06. – 1F vs 2C
-  [2, 17],  // Sp.4:  29.06. – 1C vs 2F
-  [8, 25],  // Sp.5:  30.06. – 1I vs Dritter
-  [16,20],  // Sp.6:  30.06. – 2E vs 2I
-  [0, 26],  // Sp.7:  30.06. – 1A vs Dritter
-  [11,27],  // Sp.8:  01.07. – 1L vs Dritter
-  [3, 28],  // Sp.9:  01.07. – 1D vs Dritter
-  [6, 29],  // Sp.10: 01.07. – 1G vs Dritter
-  [22,23],  // Sp.11: 02.07. – 2K vs 2L
-  [7, 21],  // Sp.12: 02.07. – 1H vs 2J
-  [1, 30],  // Sp.13: 02.07. – 1B vs Dritter
-  [9, 19],  // Sp.14: 03.07. – 1J vs 2H
-  [10,31],  // Sp.15: 03.07. – 1K vs Dritter
-  [15,18],  // Sp.16: 03.07. – 2D vs 2G
+  [12,13],  // Sp.1:  28.06. 21:00 – 2A vs 2B
+  [4, 24],  // Sp.2:  29.06. 19:00 – 1E vs Dritter
+  [5, 14],  // Sp.3:  29.06. 22:30 – 1F vs 2C
+  [2, 17],  // Sp.4:  30.06. 03:00 – 1C vs 2F
+  [8, 25],  // Sp.5:  30.06. 19:00 – 1I vs Dritter
+  [16,20],  // Sp.6:  30.06. 23:00 – 2E vs 2I
+  [0, 26],  // Sp.7:  01.07. 03:00 – 1A vs Dritter
+  [11,27],  // Sp.8:  01.07. 18:00 – 1L vs Dritter
+  [3, 28],  // Sp.9:  01.07. 22:00 – 1D vs Dritter
+  [6, 29],  // Sp.10: 02.07. 02:00 – 1G vs Dritter
+  [22,23],  // Sp.11: 02.07. 21:00 – 2K vs 2L
+  [7, 21],  // Sp.12: 03.07. 01:00 – 1H vs 2J
+  [1, 30],  // Sp.13: 03.07. 05:00 – 1B vs Dritter
+  [9, 19],  // Sp.14: 03.07. 20:00 – 1J vs 2H
+  [10,31],  // Sp.15: 04.07. 00:00 – 1K vs Dritter
+  [15,18],  // Sp.16: 04.07. 03:30 – 2D vs 2G
 ];
 const KO_ROUNDS = [
   {id:"S16",label:"Sechzehntelfinale",pts:3,  n:16, dates:[
-    "28.06.","29.06.","29.06.","29.06.",
-    "30.06.","30.06.","30.06.",
-    "01.07.","01.07.","01.07.",
-    "02.07.","02.07.","02.07.",
-    "03.07.","03.07.","03.07."]},
+    "28.06.","29.06.","29.06.","30.06.",
+    "30.06.","30.06.","01.07.",
+    "01.07.","01.07.","02.07.",
+    "02.07.","03.07.","03.07.","03.07.",
+    "04.07.","04.07."], times:[
+    "21:00","19:00","22:30","03:00",
+    "19:00","23:00","03:00",
+    "18:00","22:00","02:00",
+    "21:00","01:00","05:00","20:00",
+    "00:00","03:30"]},
   {id:"S8", label:"Achtelfinale",     pts:5,  n:8,  dates:[
-    "05.07.","05.07.","06.07.","06.07.",
-    "07.07.","07.07.","08.07.","08.07."]},
+    "04.07.","04.07.","05.07.","06.07.",
+    "06.07.","07.07.","07.07.","07.07."], times:[
+    "19:00","23:00","22:00","02:00",
+    "21:00","02:00","18:00","22:00"]},
   {id:"VF", label:"Viertelfinale",    pts:10, n:4,  dates:[
-    "10.07.","10.07.","11.07.","11.07."]},
-  {id:"HF", label:"Halbfinale",       pts:15, n:2,  dates:["14.07.","15.07."]},
-  {id:"F",  label:"Finale",           pts:20, n:1,  dates:["19.07."]},
+    "09.07.","10.07.","11.07.","12.07."], times:[
+    "22:00","21:00","23:00","03:00"]},
+  {id:"HF", label:"Halbfinale",       pts:15, n:2,  dates:["14.07.","15.07."], times:["21:00","21:00"]},
+  {id:"F",  label:"Finale",           pts:20, n:1,  dates:["19.07."], times:["21:00"]},
 ];
 const ROUND_IDS = KO_ROUNDS.map(r => r.id);
 
@@ -496,8 +506,9 @@ function renderGroupMatches(g, mlist) {
     const sc = scores[m.id]||'';
     const ok = parseScore(sc);
     const cls = sc ? (ok ? 'ok' : 'bad') : '';
-    return `<div class="mrow">
-      <span class="mdate">${m.d}</span>
+    const isDE = m.h === 'Deutschland' || m.a === 'Deutschland';
+    return `<div class="mrow${isDE?' de-match':''}">
+      <span class="mdate">${m.d}<span class="mtime"> ${m.t}</span></span>
       <span class="mhome">${m.h} ${flag(m.h)}</span>
       <input class="sinput ${cls}" data-id="${m.id}" value="${sc}" placeholder="0:0" maxlength="6">
       <span class="maway">${flag(m.a)} ${m.a}</span>
@@ -626,7 +637,7 @@ function renderKo() {
         html += `<div class="ko-match${decided?' decided':''}">
           <div class="ko-match-lbl">
             <span>Spiel ${mi+1}</span>
-            <span class="ko-date">${round.dates?.[mi] ?? ''}</span>
+            <span class="ko-date">${round.dates?.[mi] ?? ''}${round.times?.[mi] ? ' '+round.times[mi]+' Uhr' : ''}</span>
             <span class="pts">${round.id === 'F' ? '20+25 Pkt' : round.pts + ' Pkt'}</span>
           </div>
           <div class="ko-match-teams">

@@ -46,78 +46,78 @@ ALLE_TEAMS = [
 ]
 
 GRUPPENSPIELE = [
-    {"id": "A1", "datum": "11.06.", "heim": "Mexiko",         "gast": "Südafrika",        "gruppe": "A"},
-    {"id": "A2", "datum": "11.06.", "heim": "Südkorea",       "gast": "Tschechien",       "gruppe": "A"},
-    {"id": "A3", "datum": "18.06.", "heim": "Tschechien",     "gast": "Südafrika",        "gruppe": "A"},
-    {"id": "A4", "datum": "18.06.", "heim": "Mexiko",         "gast": "Südkorea",         "gruppe": "A"},
-    {"id": "A5", "datum": "24.06.", "heim": "Tschechien",     "gast": "Mexiko",           "gruppe": "A"},
-    {"id": "A6", "datum": "24.06.", "heim": "Südafrika",      "gast": "Südkorea",         "gruppe": "A"},
-    {"id": "B1", "datum": "12.06.", "heim": "Kanada",         "gast": "Bosnien-Herzegowina", "gruppe": "B"},
-    {"id": "B2", "datum": "13.06.", "heim": "Katar",          "gast": "Schweiz",          "gruppe": "B"},
-    {"id": "B3", "datum": "18.06.", "heim": "Schweiz",        "gast": "Bosnien-Herzegowina", "gruppe": "B"},
-    {"id": "B4", "datum": "18.06.", "heim": "Kanada",         "gast": "Katar",            "gruppe": "B"},
-    {"id": "B5", "datum": "24.06.", "heim": "Schweiz",        "gast": "Kanada",           "gruppe": "B"},
-    {"id": "B6", "datum": "24.06.", "heim": "Bosnien-Herzegowina", "gast": "Katar",       "gruppe": "B"},
-    {"id": "C1", "datum": "13.06.", "heim": "Brasilien",      "gast": "Marokko",          "gruppe": "C"},
-    {"id": "C2", "datum": "13.06.", "heim": "Haiti",          "gast": "Schottland",       "gruppe": "C"},
-    {"id": "C3", "datum": "19.06.", "heim": "Schottland",     "gast": "Marokko",          "gruppe": "C"},
-    {"id": "C4", "datum": "19.06.", "heim": "Brasilien",      "gast": "Haiti",            "gruppe": "C"},
-    {"id": "C5", "datum": "24.06.", "heim": "Schottland",     "gast": "Brasilien",        "gruppe": "C"},
-    {"id": "C6", "datum": "24.06.", "heim": "Marokko",        "gast": "Haiti",            "gruppe": "C"},
-    {"id": "D1", "datum": "12.06.", "heim": "USA",            "gast": "Paraguay",         "gruppe": "D"},
-    {"id": "D2", "datum": "13.06.", "heim": "Australien",     "gast": "Türkei",           "gruppe": "D"},
-    {"id": "D3", "datum": "19.06.", "heim": "USA",            "gast": "Australien",       "gruppe": "D"},
-    {"id": "D4", "datum": "19.06.", "heim": "Türkei",         "gast": "Paraguay",         "gruppe": "D"},
-    {"id": "D5", "datum": "25.06.", "heim": "Türkei",         "gast": "USA",              "gruppe": "D"},
-    {"id": "D6", "datum": "25.06.", "heim": "Paraguay",       "gast": "Australien",       "gruppe": "D"},
-    {"id": "E1", "datum": "14.06.", "heim": "Deutschland",    "gast": "Curaçao",          "gruppe": "E"},
-    {"id": "E2", "datum": "14.06.", "heim": "Elfenbeinküste", "gast": "Ecuador",          "gruppe": "E"},
-    {"id": "E3", "datum": "20.06.", "heim": "Deutschland",    "gast": "Elfenbeinküste",   "gruppe": "E"},
-    {"id": "E4", "datum": "20.06.", "heim": "Ecuador",        "gast": "Curaçao",          "gruppe": "E"},
-    {"id": "E5", "datum": "25.06.", "heim": "Curaçao",        "gast": "Elfenbeinküste",   "gruppe": "E"},
-    {"id": "E6", "datum": "25.06.", "heim": "Ecuador",        "gast": "Deutschland",      "gruppe": "E"},
-    {"id": "F1", "datum": "14.06.", "heim": "Niederlande",    "gast": "Japan",            "gruppe": "F"},
-    {"id": "F2", "datum": "14.06.", "heim": "Schweden",       "gast": "Tunesien",         "gruppe": "F"},
-    {"id": "F3", "datum": "20.06.", "heim": "Niederlande",    "gast": "Schweden",         "gruppe": "F"},
-    {"id": "F4", "datum": "20.06.", "heim": "Tunesien",       "gast": "Japan",            "gruppe": "F"},
-    {"id": "F5", "datum": "25.06.", "heim": "Japan",          "gast": "Schweden",         "gruppe": "F"},
-    {"id": "F6", "datum": "25.06.", "heim": "Tunesien",       "gast": "Niederlande",      "gruppe": "F"},
-    {"id": "G1", "datum": "15.06.", "heim": "Belgien",        "gast": "Ägypten",          "gruppe": "G"},
-    {"id": "G2", "datum": "15.06.", "heim": "Iran",           "gast": "Neuseeland",       "gruppe": "G"},
-    {"id": "G3", "datum": "21.06.", "heim": "Belgien",        "gast": "Iran",             "gruppe": "G"},
-    {"id": "G4", "datum": "21.06.", "heim": "Neuseeland",     "gast": "Ägypten",          "gruppe": "G"},
-    {"id": "G5", "datum": "26.06.", "heim": "Ägypten",        "gast": "Iran",             "gruppe": "G"},
-    {"id": "G6", "datum": "26.06.", "heim": "Neuseeland",     "gast": "Belgien",          "gruppe": "G"},
-    {"id": "H1", "datum": "15.06.", "heim": "Spanien",        "gast": "Kap Verde",        "gruppe": "H"},
-    {"id": "H2", "datum": "15.06.", "heim": "Saudi-Arabien",  "gast": "Uruguay",          "gruppe": "H"},
-    {"id": "H3", "datum": "21.06.", "heim": "Spanien",        "gast": "Saudi-Arabien",    "gruppe": "H"},
-    {"id": "H4", "datum": "21.06.", "heim": "Uruguay",        "gast": "Kap Verde",        "gruppe": "H"},
-    {"id": "H5", "datum": "26.06.", "heim": "Kap Verde",      "gast": "Saudi-Arabien",    "gruppe": "H"},
-    {"id": "H6", "datum": "26.06.", "heim": "Uruguay",        "gast": "Spanien",          "gruppe": "H"},
-    {"id": "I1", "datum": "16.06.", "heim": "Frankreich",     "gast": "Senegal",          "gruppe": "I"},
-    {"id": "I2", "datum": "16.06.", "heim": "Irak",           "gast": "Norwegen",         "gruppe": "I"},
-    {"id": "I3", "datum": "22.06.", "heim": "Frankreich",     "gast": "Irak",             "gruppe": "I"},
-    {"id": "I4", "datum": "22.06.", "heim": "Norwegen",       "gast": "Senegal",          "gruppe": "I"},
-    {"id": "I5", "datum": "26.06.", "heim": "Norwegen",       "gast": "Frankreich",       "gruppe": "I"},
-    {"id": "I6", "datum": "26.06.", "heim": "Senegal",        "gast": "Irak",             "gruppe": "I"},
-    {"id": "J1", "datum": "16.06.", "heim": "Argentinien",    "gast": "Algerien",         "gruppe": "J"},
-    {"id": "J2", "datum": "16.06.", "heim": "Österreich",     "gast": "Jordanien",        "gruppe": "J"},
-    {"id": "J3", "datum": "22.06.", "heim": "Argentinien",    "gast": "Österreich",       "gruppe": "J"},
-    {"id": "J4", "datum": "22.06.", "heim": "Jordanien",      "gast": "Algerien",         "gruppe": "J"},
-    {"id": "J5", "datum": "27.06.", "heim": "Algerien",       "gast": "Österreich",       "gruppe": "J"},
-    {"id": "J6", "datum": "27.06.", "heim": "Jordanien",      "gast": "Argentinien",      "gruppe": "J"},
-    {"id": "K1", "datum": "17.06.", "heim": "Portugal",       "gast": "DR Kongo",         "gruppe": "K"},
-    {"id": "K2", "datum": "17.06.", "heim": "Usbekistan",     "gast": "Kolumbien",        "gruppe": "K"},
-    {"id": "K3", "datum": "23.06.", "heim": "Portugal",       "gast": "Usbekistan",       "gruppe": "K"},
-    {"id": "K4", "datum": "23.06.", "heim": "Kolumbien",      "gast": "DR Kongo",         "gruppe": "K"},
-    {"id": "K5", "datum": "27.06.", "heim": "Kolumbien",      "gast": "Portugal",         "gruppe": "K"},
-    {"id": "K6", "datum": "27.06.", "heim": "DR Kongo",       "gast": "Usbekistan",       "gruppe": "K"},
-    {"id": "L1", "datum": "17.06.", "heim": "England",        "gast": "Kroatien",         "gruppe": "L"},
-    {"id": "L2", "datum": "17.06.", "heim": "Ghana",          "gast": "Panama",           "gruppe": "L"},
-    {"id": "L3", "datum": "23.06.", "heim": "England",        "gast": "Ghana",            "gruppe": "L"},
-    {"id": "L4", "datum": "23.06.", "heim": "Panama",         "gast": "Kroatien",         "gruppe": "L"},
-    {"id": "L5", "datum": "27.06.", "heim": "Panama",         "gast": "England",          "gruppe": "L"},
-    {"id": "L6", "datum": "27.06.", "heim": "Kroatien",       "gast": "Ghana",            "gruppe": "L"},
+    {"id": "A1", "datum": "11.06.", "uhrzeit": "21:00", "heim": "Mexiko",         "gast": "Südafrika",           "gruppe": "A"},
+    {"id": "A2", "datum": "12.06.", "uhrzeit": "04:00", "heim": "Südkorea",       "gast": "Tschechien",          "gruppe": "A"},
+    {"id": "A3", "datum": "18.06.", "uhrzeit": "18:00", "heim": "Tschechien",     "gast": "Südafrika",           "gruppe": "A"},
+    {"id": "A4", "datum": "19.06.", "uhrzeit": "03:00", "heim": "Mexiko",         "gast": "Südkorea",            "gruppe": "A"},
+    {"id": "A5", "datum": "25.06.", "uhrzeit": "03:00", "heim": "Tschechien",     "gast": "Mexiko",              "gruppe": "A"},
+    {"id": "A6", "datum": "25.06.", "uhrzeit": "03:00", "heim": "Südafrika",      "gast": "Südkorea",            "gruppe": "A"},
+    {"id": "B1", "datum": "12.06.", "uhrzeit": "21:00", "heim": "Kanada",         "gast": "Bosnien-Herzegowina", "gruppe": "B"},
+    {"id": "B2", "datum": "13.06.", "uhrzeit": "21:00", "heim": "Katar",          "gast": "Schweiz",             "gruppe": "B"},
+    {"id": "B3", "datum": "18.06.", "uhrzeit": "21:00", "heim": "Schweiz",        "gast": "Bosnien-Herzegowina", "gruppe": "B"},
+    {"id": "B4", "datum": "19.06.", "uhrzeit": "00:00", "heim": "Kanada",         "gast": "Katar",               "gruppe": "B"},
+    {"id": "B5", "datum": "24.06.", "uhrzeit": "21:00", "heim": "Schweiz",        "gast": "Kanada",              "gruppe": "B"},
+    {"id": "B6", "datum": "24.06.", "uhrzeit": "21:00", "heim": "Bosnien-Herzegowina", "gast": "Katar",          "gruppe": "B"},
+    {"id": "C1", "datum": "14.06.", "uhrzeit": "00:00", "heim": "Brasilien",      "gast": "Marokko",             "gruppe": "C"},
+    {"id": "C2", "datum": "14.06.", "uhrzeit": "03:00", "heim": "Haiti",          "gast": "Schottland",          "gruppe": "C"},
+    {"id": "C3", "datum": "20.06.", "uhrzeit": "00:00", "heim": "Schottland",     "gast": "Marokko",             "gruppe": "C"},
+    {"id": "C4", "datum": "20.06.", "uhrzeit": "02:30", "heim": "Brasilien",      "gast": "Haiti",               "gruppe": "C"},
+    {"id": "C5", "datum": "25.06.", "uhrzeit": "00:00", "heim": "Schottland",     "gast": "Brasilien",           "gruppe": "C"},
+    {"id": "C6", "datum": "25.06.", "uhrzeit": "00:00", "heim": "Marokko",        "gast": "Haiti",               "gruppe": "C"},
+    {"id": "D1", "datum": "13.06.", "uhrzeit": "03:00", "heim": "USA",            "gast": "Paraguay",            "gruppe": "D"},
+    {"id": "D2", "datum": "14.06.", "uhrzeit": "06:00", "heim": "Australien",     "gast": "Türkei",              "gruppe": "D"},
+    {"id": "D3", "datum": "19.06.", "uhrzeit": "21:00", "heim": "USA",            "gast": "Australien",          "gruppe": "D"},
+    {"id": "D4", "datum": "20.06.", "uhrzeit": "05:00", "heim": "Türkei",         "gast": "Paraguay",            "gruppe": "D"},
+    {"id": "D5", "datum": "26.06.", "uhrzeit": "04:00", "heim": "Türkei",         "gast": "USA",                 "gruppe": "D"},
+    {"id": "D6", "datum": "26.06.", "uhrzeit": "04:00", "heim": "Paraguay",       "gast": "Australien",          "gruppe": "D"},
+    {"id": "E1", "datum": "14.06.", "uhrzeit": "19:00", "heim": "Deutschland",    "gast": "Curaçao",             "gruppe": "E"},
+    {"id": "E2", "datum": "15.06.", "uhrzeit": "01:00", "heim": "Elfenbeinküste", "gast": "Ecuador",             "gruppe": "E"},
+    {"id": "E3", "datum": "20.06.", "uhrzeit": "22:00", "heim": "Deutschland",    "gast": "Elfenbeinküste",      "gruppe": "E"},
+    {"id": "E4", "datum": "21.06.", "uhrzeit": "02:00", "heim": "Ecuador",        "gast": "Curaçao",             "gruppe": "E"},
+    {"id": "E5", "datum": "25.06.", "uhrzeit": "22:00", "heim": "Curaçao",        "gast": "Elfenbeinküste",      "gruppe": "E"},
+    {"id": "E6", "datum": "25.06.", "uhrzeit": "22:00", "heim": "Ecuador",        "gast": "Deutschland",         "gruppe": "E"},
+    {"id": "F1", "datum": "14.06.", "uhrzeit": "22:00", "heim": "Niederlande",    "gast": "Japan",               "gruppe": "F"},
+    {"id": "F2", "datum": "15.06.", "uhrzeit": "04:00", "heim": "Schweden",       "gast": "Tunesien",            "gruppe": "F"},
+    {"id": "F3", "datum": "20.06.", "uhrzeit": "19:00", "heim": "Niederlande",    "gast": "Schweden",            "gruppe": "F"},
+    {"id": "F4", "datum": "21.06.", "uhrzeit": "06:00", "heim": "Tunesien",       "gast": "Japan",               "gruppe": "F"},
+    {"id": "F5", "datum": "26.06.", "uhrzeit": "01:00", "heim": "Japan",          "gast": "Schweden",            "gruppe": "F"},
+    {"id": "F6", "datum": "26.06.", "uhrzeit": "01:00", "heim": "Tunesien",       "gast": "Niederlande",         "gruppe": "F"},
+    {"id": "G1", "datum": "15.06.", "uhrzeit": "21:00", "heim": "Belgien",        "gast": "Ägypten",             "gruppe": "G"},
+    {"id": "G2", "datum": "16.06.", "uhrzeit": "03:00", "heim": "Iran",           "gast": "Neuseeland",          "gruppe": "G"},
+    {"id": "G3", "datum": "21.06.", "uhrzeit": "21:00", "heim": "Belgien",        "gast": "Iran",                "gruppe": "G"},
+    {"id": "G4", "datum": "22.06.", "uhrzeit": "03:00", "heim": "Neuseeland",     "gast": "Ägypten",             "gruppe": "G"},
+    {"id": "G5", "datum": "27.06.", "uhrzeit": "05:00", "heim": "Ägypten",        "gast": "Iran",                "gruppe": "G"},
+    {"id": "G6", "datum": "27.06.", "uhrzeit": "05:00", "heim": "Neuseeland",     "gast": "Belgien",             "gruppe": "G"},
+    {"id": "H1", "datum": "15.06.", "uhrzeit": "18:00", "heim": "Spanien",        "gast": "Kap Verde",           "gruppe": "H"},
+    {"id": "H2", "datum": "16.06.", "uhrzeit": "00:00", "heim": "Saudi-Arabien",  "gast": "Uruguay",             "gruppe": "H"},
+    {"id": "H3", "datum": "21.06.", "uhrzeit": "18:00", "heim": "Spanien",        "gast": "Saudi-Arabien",       "gruppe": "H"},
+    {"id": "H4", "datum": "22.06.", "uhrzeit": "00:00", "heim": "Uruguay",        "gast": "Kap Verde",           "gruppe": "H"},
+    {"id": "H5", "datum": "27.06.", "uhrzeit": "02:00", "heim": "Kap Verde",      "gast": "Saudi-Arabien",       "gruppe": "H"},
+    {"id": "H6", "datum": "27.06.", "uhrzeit": "02:00", "heim": "Uruguay",        "gast": "Spanien",             "gruppe": "H"},
+    {"id": "I1", "datum": "16.06.", "uhrzeit": "21:00", "heim": "Frankreich",     "gast": "Senegal",             "gruppe": "I"},
+    {"id": "I2", "datum": "17.06.", "uhrzeit": "00:00", "heim": "Irak",           "gast": "Norwegen",            "gruppe": "I"},
+    {"id": "I3", "datum": "22.06.", "uhrzeit": "23:00", "heim": "Frankreich",     "gast": "Irak",                "gruppe": "I"},
+    {"id": "I4", "datum": "23.06.", "uhrzeit": "02:00", "heim": "Norwegen",       "gast": "Senegal",             "gruppe": "I"},
+    {"id": "I5", "datum": "26.06.", "uhrzeit": "21:00", "heim": "Norwegen",       "gast": "Frankreich",          "gruppe": "I"},
+    {"id": "I6", "datum": "26.06.", "uhrzeit": "21:00", "heim": "Senegal",        "gast": "Irak",                "gruppe": "I"},
+    {"id": "J1", "datum": "17.06.", "uhrzeit": "03:00", "heim": "Argentinien",    "gast": "Algerien",            "gruppe": "J"},
+    {"id": "J2", "datum": "17.06.", "uhrzeit": "06:00", "heim": "Österreich",     "gast": "Jordanien",           "gruppe": "J"},
+    {"id": "J3", "datum": "22.06.", "uhrzeit": "19:00", "heim": "Argentinien",    "gast": "Österreich",          "gruppe": "J"},
+    {"id": "J4", "datum": "23.06.", "uhrzeit": "05:00", "heim": "Jordanien",      "gast": "Algerien",            "gruppe": "J"},
+    {"id": "J5", "datum": "28.06.", "uhrzeit": "04:00", "heim": "Algerien",       "gast": "Österreich",          "gruppe": "J"},
+    {"id": "J6", "datum": "28.06.", "uhrzeit": "04:00", "heim": "Jordanien",      "gast": "Argentinien",         "gruppe": "J"},
+    {"id": "K1", "datum": "17.06.", "uhrzeit": "19:00", "heim": "Portugal",       "gast": "DR Kongo",            "gruppe": "K"},
+    {"id": "K2", "datum": "18.06.", "uhrzeit": "04:00", "heim": "Usbekistan",     "gast": "Kolumbien",           "gruppe": "K"},
+    {"id": "K3", "datum": "23.06.", "uhrzeit": "19:00", "heim": "Portugal",       "gast": "Usbekistan",          "gruppe": "K"},
+    {"id": "K4", "datum": "24.06.", "uhrzeit": "04:00", "heim": "Kolumbien",      "gast": "DR Kongo",            "gruppe": "K"},
+    {"id": "K5", "datum": "28.06.", "uhrzeit": "01:30", "heim": "Kolumbien",      "gast": "Portugal",            "gruppe": "K"},
+    {"id": "K6", "datum": "28.06.", "uhrzeit": "01:30", "heim": "DR Kongo",       "gast": "Usbekistan",          "gruppe": "K"},
+    {"id": "L1", "datum": "17.06.", "uhrzeit": "22:00", "heim": "England",        "gast": "Kroatien",            "gruppe": "L"},
+    {"id": "L2", "datum": "18.06.", "uhrzeit": "01:00", "heim": "Ghana",          "gast": "Panama",              "gruppe": "L"},
+    {"id": "L3", "datum": "23.06.", "uhrzeit": "22:00", "heim": "England",        "gast": "Ghana",               "gruppe": "L"},
+    {"id": "L4", "datum": "24.06.", "uhrzeit": "01:00", "heim": "Panama",         "gast": "Kroatien",            "gruppe": "L"},
+    {"id": "L5", "datum": "27.06.", "uhrzeit": "23:00", "heim": "Panama",         "gast": "England",             "gruppe": "L"},
+    {"id": "L6", "datum": "27.06.", "uhrzeit": "23:00", "heim": "Kroatien",       "gast": "Ghana",               "gruppe": "L"},
 ]
 
 # ============================================================
@@ -548,7 +548,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             pts      = d.get("punkte", 0) if ergebnis else None
             spiele.append({
                 "id": m["id"], "gr": m["gruppe"],
-                "heim": m["heim"], "gast": m["gast"], "datum": m["datum"],
+                "heim": m["heim"], "gast": m["gast"], "datum": m["datum"], "uhrzeit": m.get("uhrzeit", ""),
                 "tipp": tipp, "ergebnis": ergebnis, "punkte": pts,
             })
 
@@ -646,6 +646,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#07101f;color:#d0e0f
 .ko-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
 .ko-rname{width:135px;font-size:.75rem;color:#546e7a;font-weight:600;text-transform:uppercase;padding-top:3px;flex-shrink:0}
 .ko-rdate{font-size:.68rem;color:#37474f;font-weight:400;text-transform:none}
+.de-row td{background:rgba(245,197,24,.07)!important;border-left:2px solid #f5c518}
 .ko-teams{display:flex;flex-wrap:wrap;gap:5px}
 .kt{padding:2px 10px;border-radius:12px;font-size:.75rem;background:#0d1c30;border:1px solid #1c3350;color:#d0e0f0}
 .kt.hit{background:#1b5e20;border-color:#2e7d32;color:#a5d6a7}.kt.miss{background:#3e0000;border-color:#b71c1c;color:#ef9a9a}
@@ -657,8 +658,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#07101f;color:#d0e0f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–03.07."],["S8","Achtelfinale","05.–07.07."],
-  ["VF","Viertelfinale","10.–11.07."],["HF","Halbfinale","14.–15.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
+const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
+  ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set();
 
 function badge(pts){
@@ -750,10 +751,11 @@ function renderDetails(){
     }).join("");
     const gameRows=p.spiele.map(s=>{
       const hasRes=s.ergebnis&&s.ergebnis!=="";
-      return `<tr data-gr="${s.gr}">
+      const isDE=s.heim==="Deutschland"||s.gast==="Deutschland";
+      return `<tr data-gr="${s.gr}"${isDE?' class="de-row"':''}>
         <td style="color:#546e7a;font-size:.73rem;width:28px">${s.gr}</td>
         <td>${s.heim} <span style="color:#1c3350">vs</span> ${s.gast}</td>
-        <td style="color:#546e7a;font-size:.73rem;width:55px">${s.datum}</td>
+        <td style="color:#546e7a;font-size:.73rem;width:70px">${s.datum}${s.uhrzeit?' '+s.uhrzeit:''}</td>
         <td class="sc">
           <span class="sc-t">${s.tipp||"–"}</span>
           <span class="arrow">→</span>
