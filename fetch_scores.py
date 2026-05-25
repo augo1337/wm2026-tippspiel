@@ -211,8 +211,6 @@ def write_ergebnisse(gs_results, ko_results):
 # MAIN
 # ──────────────────────────────────────────────────────────────
 def main():
-    publish = "--publish" in sys.argv
-
     print("=" * 50)
     print("  WM 2026 – Automatisches Score-Update")
     print("=" * 50)
@@ -244,15 +242,13 @@ def main():
     write_ergebnisse(gs_results, ko_results)
     print(f"\n✓ Ergebnisse.xlsx aktualisiert")
 
-    # Rangliste erstellen (+ optional auf Google Drive hochladen)
+    # Rangliste erstellen
     print("\nErstelle Rangliste ...")
-    publish_arg = ["--publish"] if publish else []
     result = subprocess.run(
         [sys.executable, "-X", "utf8",
          str(BASE / "auswertung.py"),
          str(TIPPS_ORDNER),
-         str(ERGEBNISSE),
-         *publish_arg],
+         str(ERGEBNISSE)],
     )
     sys.exit(result.returncode)
 

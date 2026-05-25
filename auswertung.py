@@ -6,14 +6,10 @@ Liest Tipp-Dateien (JSON vom tippzettel.html oder Ordner mit JSONs)
 + Ergebnisse.xlsx und erstellt Rangliste.xlsx + Rangliste.html.
 
 Verwendung:
-    python auswertung.py <tipps_ordner_oder_datei> <ergebnisse.xlsx> [--publish]
+    python auswertung.py <tipps_ordner_oder_datei> <ergebnisse.xlsx>
 
 Beispiele:
-    python auswertung.py Tipps/        Ergebnisse.xlsx            # nur lokal
-    python auswertung.py Tipps/        Ergebnisse.xlsx --publish  # + Google Drive
-
---publish lädt die HTML-Rangliste automatisch auf Google Drive hoch.
-Einmalige Einrichtung: python setup_googledrive.py (siehe SETUP_GOOGLEDRIVE.md)
+    python auswertung.py Tipps/        Ergebnisse.xlsx
 """
 
 import sys
@@ -898,87 +894,17 @@ const DATA={data_json};
         f.write(html)
 
 # ============================================================
-# GOOGLE DRIVE AUTO-PUBLISH
-# ============================================================
-
-def upload_to_google_drive(html_path: Path):
-    try:
-        from googleapiclient.discovery import build
-        from googleapiclient.http import MediaFileUpload
-    except ImportError:
-        print("FEHLER: Google-Bibliotheken nicht installiert.")
-        print("  Bitte ausführen: pip install google-api-python-client google-auth-oauthlib")
-        return
-
-    script_dir  = Path(__file__).parent
-    config_file = script_dir / "google_drive_config.txt"
-    sa_file     = script_dir / "service_account.json"
-    creds_file  = script_dir / "credentials.json"
-
-    # ── Authentifizierung: Service Account hat Vorrang vor OAuth ──
-    creds = None
-    if sa_file.exists():
-        from google.oauth2 import service_account
-        creds = service_account.Credentials.from_service_account_file(
-            str(sa_file),
-            scopes=["https://www.googleapis.com/auth/drive"],
-        )
-        print("  Auth: Service Account")
-    elif creds_file.exists():
-        from google.oauth2.credentials import Credentials
-        from google_auth_oauthlib.flow import InstalledAppFlow
-        from google.auth.transport.requests import Request
-        SCOPES = ["https://www.googleapis.com/auth/drive.file"]
-        token_file = script_dir / "token.json"
-        if token_file.exists():
-            creds = Credentials.from_authorized_user_file(str(token_file), SCOPES)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(str(creds_file), SCOPES)
-                creds = flow.run_local_server(port=0)
-            token_file.write_text(creds.to_json(), encoding="utf-8")
-        print("  Auth: OAuth")
-    else:
-        print("HINWEIS: Weder service_account.json noch credentials.json gefunden.")
-        print("  Führe 'python setup_googledrive.py' aus (siehe SETUP_GOOGLEDRIVE.md).")
-        return
-
-    service = build("drive", "v3", credentials=creds)
-    media   = MediaFileUpload(str(html_path), mimetype="text/html", resumable=False)
-    file_id = config_file.read_text(encoding="utf-8").strip() if config_file.exists() else None
-
-    if file_id:
-        service.files().update(fileId=file_id, media_body=media).execute()
-        print("✓ Google Drive aktualisiert.")
-    else:
-        meta = {"name": "WM2026_Rangliste.html", "mimeType": "text/html"}
-        file = service.files().create(body=meta, media_body=media, fields="id").execute()
-        file_id = file.get("id")
-        config_file.write_text(file_id, encoding="utf-8")
-        service.permissions().create(
-            fileId=file_id, body={"type": "anyone", "role": "reader"}
-        ).execute()
-        print("✓ Google Drive Datei erstellt und für alle freigegeben.")
-
-    print(f"✓ Link: https://drive.google.com/file/d/{file_id}/view")
-
-# ============================================================
 # MAIN
 # ============================================================
 
 def main():
     if len(sys.argv) < 3:
-        print("Verwendung: python auswertung.py <tipps_ordner_oder_datei> <ergebnisse.xlsx> [--publish]")
-        print("Beispiele:")
-        print("  python auswertung.py Tipps/  Ergebnisse.xlsx")
-        print("  python auswertung.py Tipps/  Ergebnisse.xlsx --publish")
+        print("Verwendung: python auswertung.py <tipps_ordner_oder_datei> <ergebnisse.xlsx>")
+        print("Beispiel:   python auswertung.py Tipps/  Ergebnisse.xlsx")
         sys.exit(1)
 
     tipps_path      = Path(sys.argv[1])
     ergebnisse_path = Path(sys.argv[2])
-    publish         = "--publish" in sys.argv
 
     print(f"Lese Tipps aus:      {tipps_path}")
     print(f"Lese Ergebnisse aus: {ergebnisse_path}")
@@ -995,7 +921,7 @@ def main():
 
     rows = auswerten(df, gs_results, ko_results)
 
-    out_path = Path(f"Rangliste_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.xlsx")
+    out_path = Path("Rangliste.xlsx")
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
@@ -1005,7 +931,7 @@ def main():
 
     wb.save(out_path)
 
-    html_path = Path(f"Rangliste_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.html")
+    html_path = Path("Rangliste.html")
     write_html_rangliste(rows, gs_results, ko_results, html_path)
 
     print(f"\n✓ Excel gespeichert:  {out_path}")
@@ -1015,10 +941,6 @@ def main():
     print("-" * 40)
     for r in rows:
         print(f"{r['Platz']:>5}  {r['Name']:<22}  {r['Gesamt']:>6}")
-
-    if publish:
-        print("\nLade auf Google Drive hoch ...")
-        upload_to_google_drive(html_path)
 
 if __name__ == "__main__":
     main()

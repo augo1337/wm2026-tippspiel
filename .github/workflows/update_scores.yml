@@ -6,6 +6,9 @@ on:
     - cron: '17 */2 * * *'
   workflow_dispatch:  # Manueller Start jederzeit möglich
 
+permissions:
+  contents: write
+
 jobs:
   update-scores:
     runs-on: ubuntu-latest
@@ -23,14 +26,15 @@ jobs:
       - name: Abhängigkeiten installieren
         run: pip install -r requirements.txt
 
-      - name: Service Account anlegen
-        run: echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service_account.json
-
-      - name: Ergebnisse holen & Rangliste hochladen
+      - name: Ergebnisse holen & Rangliste erstellen
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-        run: python -X utf8 fetch_scores.py --publish
+        run: python -X utf8 fetch_scores.py
 
-      - name: Service Account aufräumen
-        if: always()
-        run: rm -f service_account.json
+      - name: Rangliste committen & pushen
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Rangliste.html Ergebnisse.xlsx
+          git diff --cached --quiet || git commit -m "Auto-Update: Rangliste $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git push
