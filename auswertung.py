@@ -585,7 +585,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5fd;min-height:100vh;font-size:15px}
 .hdr{background:linear-gradient(135deg,#1e3f60,#0e2848);border-bottom:2px solid #c8a200;padding:16px 24px;display:flex;align-items:center;gap:14px}
-.hdr-logo{height:60px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));flex-shrink:0}.hdr-mascot{height:68px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));flex-shrink:0;margin-left:auto}.hdr-title{font-size:1.5rem;font-weight:800;color:#f5c518}.hdr-sub{font-size:.82rem;color:#a0c0de;margin-top:3px}
+.hdr-logo{height:60px;width:auto;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));flex-shrink:0}.hdr-title{font-size:1.5rem;font-weight:800;color:#f5c518}.hdr-sub{font-size:.82rem;color:#a0c0de;margin-top:3px}
 .stats{display:flex;gap:12px;flex-wrap:wrap;padding:14px 24px;background:#182d45;border-bottom:1px solid #2e4e72}
 .stat-box{background:#1c3450;border:1px solid #2e4e72;border-radius:8px;padding:10px 16px;min-width:130px}
 .stat-val{font-size:1.4rem;font-weight:800;color:#f5c518}.stat-lbl{font-size:.75rem;color:#a0c0de;margin-top:2px}
@@ -849,7 +849,7 @@ renderAll();
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
   <div class="hdr-sub">Stand: {ts} · {filled}/72 Gruppenspiele</div></div>
-  <img class="hdr-mascot" src="maskottchen.png" alt="WM 2026 Maskottchen">
+</div>
 </div>
 <div class="stats">
   <div class="stat-box"><div class="stat-val">{n}</div><div class="stat-lbl">Teilnehmer</div></div>
