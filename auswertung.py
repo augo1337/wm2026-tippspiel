@@ -668,8 +668,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .mtx th.mh-l{text-align:left}
 .mtx td{padding:5px 7px;border:1px solid #1e3550;vertical-align:middle;text-align:center}
 .mtx td.mi{text-align:left;color:#7a9bbe;font-size:.78rem;white-space:nowrap}
-.mtx td.mi-t{text-align:left;color:#c8d8e8}
-.mtx td.mi-r{text-align:center;font-weight:600;color:#eef5fd;min-width:44px}
+.mtx td.mi-t{text-align:left;color:#c8d8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.mtx td.mi-r{text-align:center;font-weight:700;color:#f5c518;min-width:52px;max-width:52px}
 .mtx tr.de-row td{background:rgba(245,197,24,.05)!important}
 .mtx tr.kommend>td:first-child{border-left:3px solid #f5c518}
 .mtx tr.kommend .mi{color:#f5c518}
@@ -684,6 +684,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .mtx tfoot td.sub-lbl{text-align:left;color:#7a9bbe;font-weight:400;font-size:.78rem}
 .mpl-name{font-size:.8rem;font-weight:600}
 .mpl-pts{font-size:.72rem;color:#f5c518;display:block;margin-top:2px}
+.mtx-grp th:nth-child(-n+3){position:sticky;z-index:3;background:#1c3450}
+.mtx-grp td:nth-child(-n+3){position:sticky;z-index:2;background:#152438}
+.mtx-grp th:nth-child(1),.mtx-grp td:nth-child(1){left:0;min-width:95px;max-width:95px}
+.mtx-grp th:nth-child(2),.mtx-grp td:nth-child(2){left:95px;min-width:180px;max-width:180px}
+.mtx-grp th:nth-child(3),.mtx-grp td:nth-child(3){left:275px;min-width:52px;max-width:52px;box-shadow:4px 0 8px rgba(0,0,0,.45)}
+.mtx-grp tr.de-row td:nth-child(-n+3){background:#1a2d42!important}
+.mtx-grp tr.kommend td:nth-child(-n+3){background:#16202e!important}
+.mtx-ko th:nth-child(-n+2){position:sticky;z-index:3;background:#1c3450}
+.mtx-ko td:nth-child(-n+2){position:sticky;z-index:2;background:#152438}
+.mtx-ko th:nth-child(1),.mtx-ko td:nth-child(1){left:0;min-width:36px;max-width:36px}
+.mtx-ko th:nth-child(2),.mtx-ko td:nth-child(2){left:36px;box-shadow:4px 0 8px rgba(0,0,0,.45)}
 """
 
     # ── JavaScript (plain string – kein f-string-Escaping) ─
@@ -811,7 +822,7 @@ function renderDetails(){
       const n=p.spiele.filter(s=>s.gr===activeTab&&s.ergebnis).length;
       return `<td><b>${pts}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${n}/6)</span></td>`;
     }).join('');
-    tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th class="mh-l" style="min-width:95px">Datum</th><th class="mh-l" style="min-width:165px">Spiel</th><th style="min-width:44px">Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppe ${activeTab} gesamt:</td>${subs}</tr></tfoot></table></div>`;
+    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppe ${activeTab} gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
@@ -822,7 +833,7 @@ function renderDetails(){
         const miss=norm.length>0&&!hit;
         return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
       }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'?'}</td>${plCells}</tr></tbody></table></div>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'?'}</td>${plCells}</tr></tbody></table></div>`;
     } else {
       const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
       const maxLen=Math.max(...tips.map(t=>t.length),0);
@@ -837,7 +848,7 @@ function renderDetails(){
           }).join('');
           return `<tr><td class="mi" style="text-align:center;width:32px">${i+1}.</td><td class="mi-t">${actual[i]||'–'}</td>${plCells}</tr>`;
         }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th style="width:32px">#</th><th class="mh-l">Weitergekommen</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="width:32px">#</th><th class="mh-l">Weitergekommen</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
   cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div>${tableHtml}`;
