@@ -19,7 +19,7 @@ import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # ============================================================
@@ -533,6 +533,17 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             pass
         return str(val).strip()
 
+    # ── Upcoming-Match-Erkennung ──────────────────────────
+    _now  = datetime.now()
+    _soon = (_now + timedelta(days=2)).date()
+    def _is_kommend(datum_str, has_result):
+        if has_result:
+            return False
+        try:
+            return datetime.strptime(datum_str.rstrip('.') + '.2026', '%d.%m.%Y').date() <= _soon
+        except Exception:
+            return False
+
     # ── Daten für JavaScript aufbereiten ──────────────────
     players_js = []
     for r in rows:
@@ -546,6 +557,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
                 "id": m["id"], "gr": m["gruppe"],
                 "heim": m["heim"], "gast": m["gast"], "datum": m["datum"], "uhrzeit": m.get("uhrzeit", ""),
                 "tipp": tipp, "ergebnis": ergebnis, "punkte": pts,
+                "kommend": _is_kommend(m["datum"], bool(ergebnis)),
             })
 
         ko_tipps = {}
@@ -649,6 +661,29 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .kt.hit{background:#1b5e20;border-color:#2e7d32;color:#a5d6a7}.kt.miss{background:#3e0000;border-color:#b71c1c;color:#ef9a9a}
 .foot{text-align:center;padding:18px;color:#546e7a;font-size:.78rem;border-top:1px solid #182d45}
 @media(max-width:600px){.section{padding:12px}.filter-bar{padding:10px 12px}.pbody{padding:12px}}
+.gt-bar{display:flex;flex-wrap:wrap;gap:5px;padding:10px 0 8px}
+.mtx-wrap{overflow-x:auto}
+.mtx{width:100%;border-collapse:collapse;font-size:.82rem}
+.mtx th{background:#1c3450;color:#a0c0de;padding:6px 8px;border:1px solid #2e4e72;text-align:center;white-space:nowrap;font-weight:600}
+.mtx th.mh-l{text-align:left}
+.mtx td{padding:5px 7px;border:1px solid #1e3550;vertical-align:middle;text-align:center}
+.mtx td.mi{text-align:left;color:#7a9bbe;font-size:.78rem;white-space:nowrap}
+.mtx td.mi-t{text-align:left;color:#c8d8e8}
+.mtx td.mi-r{text-align:center;font-weight:600;color:#eef5fd;min-width:44px}
+.mtx tr.de-row td{background:rgba(245,197,24,.05)!important}
+.mtx tr.kommend>td:first-child{border-left:3px solid #f5c518}
+.mtx tr.kommend .mi{color:#f5c518}
+.mcel{font-size:.82rem}
+.mcel-ex{background:rgba(39,174,96,.22);color:#5dde8a}
+.mcel-df{background:rgba(79,195,247,.15);color:#4fc3f7}
+.mcel-td{background:rgba(255,167,38,.15);color:#ffa726}
+.mcel-ms{background:rgba(180,40,40,.1);color:#7a9bbe}
+.mcel-op{color:#c8d8e8}
+.mcel-sub{display:block;font-size:.68rem;opacity:.8;margin-top:2px}
+.mtx tfoot td{background:#182d45;border-top:2px solid #2e4e72;font-weight:700;color:#f5c518;text-align:center;padding:6px 8px}
+.mtx tfoot td.sub-lbl{text-align:left;color:#7a9bbe;font-weight:400;font-size:.78rem}
+.mpl-name{font-size:.8rem;font-weight:600}
+.mpl-pts{font-size:.72rem;color:#f5c518;display:block;margin-top:2px}
 """
 
     # ── JavaScript (plain string – kein f-string-Escaping) ─
@@ -657,7 +692,7 @@ const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
 const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
   ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
-let selected=new Set();
+let selected=new Set(DATA.players.map(p=>p.name));
 
 function badge(pts){
   if(pts===null||pts===undefined) return '<span class="badge op">· Offen</span>';
@@ -727,106 +762,88 @@ function togglePlayerRow(name){
   renderAll();
 }
 
+function findBestInitTab(){
+  for(const g of GROUPS){if(DATA.players[0]?.spiele.some(s=>s.gr===g&&s.kommend))return g;}
+  for(const g of GROUPS){if(DATA.players[0]?.spiele.some(s=>s.gr===g&&!s.ergebnis))return g;}
+  return 'A';
+}
+let activeTab=findBestInitTab();
+
 function renderDetails(){
-  if(selected.size===0){
-    document.getElementById("detailContainer").innerHTML=
-      `<div class="no-sel"><div class="no-sel-icon">👆</div>
-       <div class="no-sel-txt">Klicke auf einen Spieler in der Rangliste<br>oder wähle über das Dropdown aus</div></div>`;
+  const players=DATA.players.filter(p=>selected.has(p.name));
+  const cont=document.getElementById("detailContainer");
+  if(players.length===0){
+    cont.innerHTML=`<div class="no-sel"><div class="no-sel-icon">👆</div>
+      <div class="no-sel-txt">Spieler über das Dropdown auswählen</div></div>`;
     return;
   }
-  document.getElementById("detailContainer").innerHTML=DATA.players.map(p=>{
-    const pkey=p.name.replace(/\\s+/g,"_");
+  const plHdrs=players.map(p=>{
     const med=p.platz<=3?MEDALS[p.platz-1]:`${p.platz}.`;
-    const breakdown=[["Gruppe",p.gruppe],["S16",p.s16],["AF",p.s8],
-      ["VF",p.vf],["HF",p.hf],["Finale",p.finale],["WM",p.wm]]
-      .map(([k,v])=>`<span class="pbitem">${k}: <span class="pbval">${v}</span></span>`)
-      .join('<span style="color:#1c3350;padding:0 2px">·</span>');
-    const grTabs=["Alle",...GROUPS].map((g,i)=>{
-      let lbl=g;
-      if(g!=="Alle"){const cnt=p.spiele.filter(s=>s.gr===g&&s.ergebnis).length;lbl=`${g} (${cnt}/6)`;}
-      return `<span class="gtab ${i===0?"active":""}" onclick="filterGr('${pkey}','${g}')">${lbl}</span>`;
-    }).join("");
-    const gameRows=p.spiele.map(s=>{
-      const hasRes=s.ergebnis&&s.ergebnis!=="";
-      const isDE=s.heim==="Deutschland"||s.gast==="Deutschland";
-      return `<tr data-gr="${s.gr}"${isDE?' class="de-row"':''}>
-        <td style="color:#546e7a;font-size:.73rem;width:28px">${s.gr}</td>
-        <td>${s.heim} <span style="color:#1c3350">vs</span> ${s.gast}</td>
-        <td style="color:#546e7a;font-size:.73rem;width:70px">${s.datum}${s.uhrzeit?' '+s.uhrzeit:''}</td>
-        <td class="sc">
-          <span class="sc-t">${s.tipp||"–"}</span>
-          <span class="arrow">→</span>
-          <span class="sc-r">${hasRes?s.ergebnis:"?"}</span>
-        </td>
-        <td>${badge(hasRes?s.punkte:null)}</td>
-      </tr>`;
-    }).join("");
-    const koRows=KO_ROUNDS.map(([runde,label,datum])=>{
-      const tips=p.ko_tipps[runde];
-      const actual=DATA.ko[runde]||[];
-      let teamsHtml;
-      if(runde==="WM"){
-        const t=tips||"–";
-        const isHit=actual.length>0&&actual[0]&&t.toLowerCase()===actual[0];
-        const isMiss=actual.length>0&&!isHit;
-        teamsHtml=`<span class="kt ${isHit?"hit":isMiss?"miss":""}">${t}</span>`;
-      } else {
-        const list=Array.isArray(tips)?tips:[tips];
-        teamsHtml=list.filter(Boolean).map(t=>{
-          const isHit=actual.some(a=>a&&a===t.toLowerCase());
-          const isMiss=actual.length>0&&!isHit;
-          return `<span class="kt ${isHit?"hit":isMiss?"miss":""}">${t}</span>`;
-        }).join("");
-      }
-      return `<div class="ko-row">
-        <div class="ko-rname">${label}${datum?`<span class="ko-rdate"> · ${datum}</span>`:""}</div>
-        <div class="ko-teams">${teamsHtml}</div>
-      </div>`;
-    }).join("");
-    const hidden=selected.has(p.name)?"":"hidden";
-    return `<div class="pcard ${hidden}" id="card_${pkey}">
-      <div class="phdr" onclick="toggleCard('${pkey}')">
-        <span class="pmedal">${med}</span>
-        <div class="pinfo">
-          <div class="pname">${p.name}</div>
-          <div class="pbreakdown">${breakdown}</div>
-        </div>
-        <div class="ptotal">${p.gesamt} Pkt</div>
-      </div>
-      <div class="pbody" id="body_${pkey}">
-        <div class="gr-tabs">${grTabs}</div>
-        <div class="wrap">
-          <table class="gtbl">
-            <thead><tr><th>Gr</th><th>Spiel</th><th>Datum</th>
-              <th>Tipp → Ergebnis</th><th>Punkte</th></tr></thead>
-            <tbody id="games_${pkey}">${gameRows}</tbody>
-          </table>
-        </div>
-        <div class="ko-wrap">
-          <div class="ko-sec-title">KO-Tipps (vor Turnier abgegeben)</div>
-          ${koRows}
-        </div>
-      </div>
-    </div>`;
-  }).join("");
+    return `<th class="mh-pl" style="min-width:100px"><span class="mpl-name">${med} ${p.name}</span><span class="mpl-pts">${p.gesamt} Pkt</span></th>`;
+  }).join('');
+  const tabsHtml=[
+    ...GROUPS.map(g=>`<span class="gtab${g===activeTab?' active':''}" onclick="setTab('${g}')">Gr.${g}</span>`),
+    `<span style="color:#2e4e72;padding:0 4px">│</span>`,
+    ...KO_ROUNDS.map(([k,lbl])=>{
+      const short={S16:'S16',S8:'S8',VF:'VF',HF:'HF',F:'Finale',WM:'WM'}[k]||k;
+      return `<span class="gtab${k===activeTab?' active':''}" onclick="setTab('${k}')">${short}</span>`;
+    })
+  ].join('');
+  let tableHtml='';
+  if(GROUPS.includes(activeTab)){
+    const matches=players[0].spiele.filter(s=>s.gr===activeTab);
+    const rows=matches.map(s=>{
+      const hasRes=s.ergebnis&&s.ergebnis!=='';
+      const isDE=s.heim==='Deutschland'||s.gast==='Deutschland';
+      const trCls=[isDE?'de-row':'',s.kommend?'kommend':''].filter(Boolean).join(' ');
+      const plCells=players.map(p=>{
+        const ps=p.spiele.find(x=>x.id===s.id)||{};
+        const tipp=ps.tipp||'–';
+        const pts=hasRes?ps.punkte:null;
+        const cls=pts===null?'mcel-op':pts===4?'mcel-ex':pts===3?'mcel-df':pts===2?'mcel-td':'mcel-ms';
+        const sub=pts!==null?`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`:'';
+        return `<td class="mcel ${cls}">${tipp}${sub}</td>`;
+      }).join('');
+      return `<tr${trCls?` class="${trCls}"`:''}><td class="mi">${s.datum}${s.uhrzeit?' '+s.uhrzeit:''}</td><td class="mi-t">${s.heim} <span style="color:#3a5f84">vs</span> ${s.gast}</td><td class="mi-r">${hasRes?s.ergebnis:s.kommend?'▶':'–'}</td>${plCells}</tr>`;
+    }).join('');
+    const subs=players.map(p=>{
+      const pts=p.spiele.filter(s=>s.gr===activeTab&&s.punkte!==null&&s.punkte!==undefined).reduce((a,s)=>a+(s.punkte||0),0);
+      const n=p.spiele.filter(s=>s.gr===activeTab&&s.ergebnis).length;
+      return `<td><b>${pts}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${n}/6)</span></td>`;
+    }).join('');
+    tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th class="mh-l" style="min-width:95px">Datum</th><th class="mh-l" style="min-width:165px">Spiel</th><th style="min-width:44px">Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppe ${activeTab} gesamt:</td>${subs}</tr></tfoot></table></div>`;
+  } else {
+    const actual=DATA.ko[activeTab]||[];
+    const norm=actual.map(t=>(t||'').toLowerCase());
+    if(activeTab==='WM'){
+      const plCells=players.map(p=>{
+        const tip=p.ko_tipps['WM']||'–';
+        const hit=norm.length>0&&tip.toLowerCase()===norm[0];
+        const miss=norm.length>0&&!hit;
+        return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
+      }).join('');
+      tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'?'}</td>${plCells}</tr></tbody></table></div>`;
+    } else {
+      const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
+      const maxLen=Math.max(...tips.map(t=>t.length),0);
+      const rows=maxLen===0
+        ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Runde noch nicht begonnen</td></tr>`
+        :Array.from({length:maxLen},(_,i)=>{
+          const plCells=players.map((p,pi)=>{
+            const tip=tips[pi][i]||'–';
+            const hit=norm.length>i&&tip.toLowerCase()===norm[i];
+            const miss=norm.length>i&&!hit;
+            return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
+          }).join('');
+          return `<tr><td class="mi" style="text-align:center;width:32px">${i+1}.</td><td class="mi-t">${actual[i]||'–'}</td>${plCells}</tr>`;
+        }).join('');
+      tableHtml=`<div class="mtx-wrap"><table class="mtx"><thead><tr><th style="width:32px">#</th><th class="mh-l">Weitergekommen</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
+    }
+  }
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div>${tableHtml}`;
 }
 
-function filterGr(pkey,grp){
-  document.querySelectorAll(`#games_${pkey} tr`).forEach(r=>{
-    r.classList.toggle("gr-hide",grp!=="Alle"&&r.dataset.gr!==grp);
-  });
-  document.querySelectorAll(`#card_${pkey} .gtab`).forEach(t=>{
-    const isAll=grp==="Alle";
-    t.classList.toggle("active",isAll?t.textContent==="Alle":t.textContent.startsWith(grp+" "));
-  });
-}
-
-const collapsed=new Set();
-function toggleCard(pkey){
-  const body=document.getElementById("body_"+pkey);
-  if(collapsed.has(pkey)){collapsed.delete(pkey);body.style.display="";}
-  else{collapsed.add(pkey);body.style.display="none";}
-}
+function setTab(tab){activeTab=tab;renderDetails();}
 
 function renderAll(){renderRanking();renderDropdown();renderDetails();}
 renderAll();
