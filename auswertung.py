@@ -667,8 +667,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .mtx th{background:#1c3450;color:#a0c0de;padding:6px 8px;border:1px solid #2e4e72;text-align:center;white-space:nowrap;font-weight:600}
 .mtx th.mh-l{text-align:left}
 .mtx td{padding:5px 7px;border:1px solid #1e3550;vertical-align:middle;text-align:center}
-.mtx td.mi{text-align:left;color:#7a9bbe;font-size:.78rem;white-space:nowrap}
-.mtx td.mi-t{text-align:left;color:#c8d8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.mtx td.mi{text-align:left;color:#7a9bbe;font-size:.78rem;white-space:nowrap;line-height:1.35}
+.mi-time{font-size:.7rem;opacity:.65}
+.gr-badge{display:inline-block;background:#1c3450;border:1px solid #2e4e72;color:#a0c0de;font-size:.65rem;font-weight:700;padding:1px 4px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.mtx td.mi-t{text-align:left;color:#c8d8e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:155px}
 .mtx td.mi-r{text-align:center;font-weight:700;color:#f5c518;min-width:52px;max-width:52px}
 .mtx tr.de-row td{background:rgba(245,197,24,.05)!important}
 .mtx tr.kommend>td:first-child{border-left:3px solid #f5c518}
@@ -686,9 +688,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .mpl-pts{font-size:.72rem;color:#f5c518;display:block;margin-top:2px}
 .mtx-grp th:nth-child(-n+3){position:sticky;z-index:3;background:#1c3450}
 .mtx-grp td:nth-child(-n+3){position:sticky;z-index:2;background:#152438}
-.mtx-grp th:nth-child(1),.mtx-grp td:nth-child(1){left:0;min-width:95px;max-width:95px}
-.mtx-grp th:nth-child(2),.mtx-grp td:nth-child(2){left:95px;min-width:180px;max-width:180px}
-.mtx-grp th:nth-child(3),.mtx-grp td:nth-child(3){left:275px;min-width:52px;max-width:52px;box-shadow:4px 0 8px rgba(0,0,0,.45)}
+.mtx-grp th:nth-child(1),.mtx-grp td:nth-child(1){left:0;min-width:60px;max-width:60px}
+.mtx-grp th:nth-child(2),.mtx-grp td:nth-child(2){left:60px;min-width:155px;max-width:155px}
+.mtx-grp th:nth-child(3),.mtx-grp td:nth-child(3){left:215px;min-width:52px;max-width:52px;box-shadow:4px 0 8px rgba(0,0,0,.45)}
 .mtx-grp tr.de-row td:nth-child(-n+3){background:#1a2d42!important}
 .mtx-grp tr.kommend td:nth-child(-n+3){background:#16202e!important}
 .mtx-ko th:nth-child(-n+2){position:sticky;z-index:3;background:#1c3450}
@@ -774,9 +776,7 @@ function togglePlayerRow(name){
 }
 
 function findBestInitTab(){
-  for(const g of GROUPS){if(DATA.players[0]?.spiele.some(s=>s.gr===g&&s.kommend))return g;}
-  for(const g of GROUPS){if(DATA.players[0]?.spiele.some(s=>s.gr===g&&!s.ergebnis))return g;}
-  return 'A';
+  return 'Gruppen';
 }
 let activeTab=findBestInitTab();
 
@@ -790,10 +790,10 @@ function renderDetails(){
   }
   const plHdrs=players.map(p=>{
     const med=p.platz<=3?MEDALS[p.platz-1]:`${p.platz}.`;
-    return `<th class="mh-pl" style="min-width:100px"><span class="mpl-name">${med} ${p.name}</span><span class="mpl-pts">${p.gesamt} Pkt</span></th>`;
+    return `<th class="mh-pl" style="min-width:75px"><span class="mpl-name">${med} ${p.name}</span><span class="mpl-pts">${p.gesamt} Pkt</span></th>`;
   }).join('');
   const tabsHtml=[
-    ...GROUPS.map(g=>`<span class="gtab${g===activeTab?' active':''}" onclick="setTab('${g}')">Gr.${g}</span>`),
+    `<span class="gtab${activeTab==='Gruppen'?' active':''}" onclick="setTab('Gruppen')">Gruppen</span>`,
     `<span style="color:#2e4e72;padding:0 4px">│</span>`,
     ...KO_ROUNDS.map(([k,lbl])=>{
       const short={S16:'S16',S8:'S8',VF:'VF',HF:'HF',F:'Finale',WM:'WM'}[k]||k;
@@ -801,9 +801,14 @@ function renderDetails(){
     })
   ].join('');
   let tableHtml='';
-  if(GROUPS.includes(activeTab)){
-    const matches=players[0].spiele.filter(s=>s.gr===activeTab);
-    const rows=matches.map(s=>{
+  if(activeTab==='Gruppen'){
+    const sortKey=s=>{
+      const p=s.datum.replace(/\\.$/,'').split('.');
+      const[h,mn]=(s.uhrzeit||'00:00').split(':').map(Number);
+      return parseInt(p[1])*1e6+parseInt(p[0])*1e4+h*100+mn;
+    };
+    const allMatches=[...players[0].spiele].sort((a,b)=>sortKey(a)-sortKey(b));
+    const rows=allMatches.map(s=>{
       const hasRes=s.ergebnis&&s.ergebnis!=='';
       const isDE=s.heim==='Deutschland'||s.gast==='Deutschland';
       const trCls=[isDE?'de-row':'',s.kommend?'kommend':''].filter(Boolean).join(' ');
@@ -815,14 +820,16 @@ function renderDetails(){
         const sub=pts!==null?`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`:'';
         return `<td class="mcel ${cls}">${tipp}${sub}</td>`;
       }).join('');
-      return `<tr${trCls?` class="${trCls}"`:''}><td class="mi">${s.datum}${s.uhrzeit?' '+s.uhrzeit:''}</td><td class="mi-t">${s.heim} <span style="color:#3a5f84">vs</span> ${s.gast}</td><td class="mi-r">${hasRes?s.ergebnis:s.kommend?'▶':'–'}</td>${plCells}</tr>`;
+      const datumHtml=`${s.datum}${s.uhrzeit?`<br><span class="mi-time">${s.uhrzeit}</span>`:''}`;
+      const spielHtml=`<span class="gr-badge">${s.gr}</span>${s.heim} <span style="color:#3a5f84">vs</span> ${s.gast}`;
+      return `<tr${trCls?` class="${trCls}"`:''}><td class="mi">${datumHtml}</td><td class="mi-t">${spielHtml}</td><td class="mi-r">${hasRes?s.ergebnis:s.kommend?'▶':'–'}</td>${plCells}</tr>`;
     }).join('');
     const subs=players.map(p=>{
-      const pts=p.spiele.filter(s=>s.gr===activeTab&&s.punkte!==null&&s.punkte!==undefined).reduce((a,s)=>a+(s.punkte||0),0);
-      const n=p.spiele.filter(s=>s.gr===activeTab&&s.ergebnis).length;
-      return `<td><b>${pts}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${n}/6)</span></td>`;
+      const pts=p.spiele.filter(s=>s.punkte!==null&&s.punkte!==undefined).reduce((a,s)=>a+(s.punkte||0),0);
+      const n=p.spiele.filter(s=>s.ergebnis).length;
+      return `<td><b>${pts}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${n}/72)</span></td>`;
     }).join('');
-    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppe ${activeTab} gesamt:</td>${subs}</tr></tfoot></table></div>`;
+    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppenphase gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
