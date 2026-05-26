@@ -135,7 +135,7 @@ KO_COLS = {
     "WM":  ["[WM] Weltmeister"],
 }
 
-KO_PUNKTE = {"S16": 5, "S8": 5, "VF": 10, "HF": 15}
+KO_PUNKTE = {"S16": 5, "S8": 10, "VF": 15}
 
 # ============================================================
 # PUNKTE BERECHNUNG
@@ -367,7 +367,6 @@ def auswerten(df, gs_results, ko_results):
             "S16": pts_ko.get("S16", 0),
             "S8":  pts_ko.get("S8",  0),
             "VF":  pts_ko.get("VF",  0),
-            "HF":  pts_ko.get("HF",  0),
             "P3":  pts_ko.get("P3",  0),
             "Finale": pts_ko.get("F", 0),
             "Weltmeister": pts_ko.get("WM", 0),
@@ -412,9 +411,9 @@ def write_rangliste(wb, rows):
     ws.sheet_view.showGridLines = False
 
     headers = ["Platz", "Name", "Gesamt", "Gruppenphase",
-               "Gr.-Qualifikation", "Sechzehntelfinale", "Achtelfinale", "Viertelfinale",
-               "Halbfinale", "Platz 3", "Finale", "Weltmeister"]
-    col_widths = [8, 22, 10, 14, 18, 18, 14, 14, 12, 10, 10, 14]
+               "Gr.-Qualifikation", "Achtelfinale", "Viertelfinale", "Halbfinale",
+               "Platz 3", "Finale", "Weltmeister"]
+    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 10, 10, 14]
 
     # Header
     for c, (h, w) in enumerate(zip(headers, col_widths), 1):
@@ -430,7 +429,7 @@ def write_rangliste(wb, rows):
     for r in rows:
         row_num = r["Platz"] + 1
         values = [r["Platz"], r["Name"], r["Gesamt"], r["Gruppenphase"],
-                  r.get("GQ", 0), r["S16"], r["S8"], r["VF"], r["HF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
+                  r.get("GQ", 0), r["S16"], r["S8"], r["VF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
 
         platz_fill = CLR_LIGHT
         if r["Platz"] == 1: platz_fill = CLR_GOLD
@@ -513,12 +512,11 @@ def write_ko_details(wb, rows, ko_results):
     ws.sheet_view.showGridLines = False
 
     runden_info = [
-        ("S16", "Sechzehntelfinale", 16, 5),
-        ("S8",  "Achtelfinale",       8, 10),
-        ("VF",  "Viertelfinale",      4, 15),
-        ("HF",  "Halbfinale",         2, 20),
-        ("F",   "Finale (beide Finalisten)", 2, 25),
-        ("WM",  "Weltmeister",        1, 30),
+        ("S16", "Achtelfinale-Teilnehmer (16)",   16, 5),
+        ("S8",  "Viertelfinale-Teilnehmer (8)",    8, 10),
+        ("VF",  "Halbfinale-Teilnehmer (4)",        4, 15),
+        ("F",   "Finale",                           2, 20),
+        ("WM",  "Weltmeister",                      1, 25),
     ]
 
     ws.cell(1, 1, "KO-Runde / Slot").font = header_font()
@@ -643,7 +641,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             "gesamt": r["Gesamt"], "gruppe": r["Gruppenphase"],
             "gq": r.get("GQ", 0),
             "s16": r["S16"], "s8": r["S8"],
-            "vf": r["VF"], "hf": r["HF"],
+            "vf": r["VF"],
             "p3": r.get("P3", 0),
             "finale": r["Finale"], "wm": r["Weltmeister"],
             "spiele": spiele, "ko_tipps": ko_tipps,
@@ -782,8 +780,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
-  ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],
+const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Achtelfinale (16 Teams)","28.06.–04.07."],["S8","Viertelfinale (8 Teams)","04.–07.07."],
+  ["VF","Halbfinale (4 Teams)","09.–12.07."],
   ["P3","Platz 3","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set(DATA.players.map(p=>p.name));
 
@@ -845,7 +843,7 @@ function renderRanking(){
       <td class="pl">${med} ${p.platz}.</td><td class="nm">${p.name}</td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
-      <td>${p.hf}</td><td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
+      <td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
     </tr>`;
   }).join("");
 }
@@ -972,7 +970,7 @@ function renderDetails(){
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
-  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · S16 +5 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale +20/Team · Weltmeister +25</div></div></details>${tableHtml}`;
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · Achtelfinale (16 Teams) +5 · Viertelfinale (8 Teams) +10 · Halbfinale (4 Teams) +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale +20/Team · Weltmeister +25</div></div></details>${tableHtml}`;
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
@@ -1022,7 +1020,7 @@ renderAll();
     <table class="rtbl">
       <thead><tr>
         <th>Platz</th><th>Name</th><th>Gesamt</th><th>Gruppe</th>
-        <th>GQ</th><th>S16</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
+        <th>GQ</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
       </tr></thead>
       <tbody id="rankBody"></tbody>
     </table>
