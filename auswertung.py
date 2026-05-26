@@ -892,7 +892,7 @@ function renderDetails(){
         :Array.from({length:maxLen},(_,i)=>{
           const plCells=players.map((p,pi)=>{
             const tip=tips[pi][i]||'–';
-            const hit=isFinale?norm.includes(tip.toLowerCase())&&norm.length>0:norm.length>i&&tip.toLowerCase()===norm[i];
+            const hit=norm.includes(tip.toLowerCase())&&norm.length>0;
             const miss=norm.length>0&&!hit&&tip!=='–';
             return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
           }).join('');
