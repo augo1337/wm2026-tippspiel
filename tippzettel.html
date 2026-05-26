@@ -178,11 +178,15 @@ input  { font-family: inherit; }
 .chk-list li.ok   { color: #5ddb8a; }  .chk-list li.ok::before   { content: "✓"; color: var(--green); }
 .chk-list li.warn { color: #f0a830; }  .chk-list li.warn::before { content: "○"; color: var(--orange); }
 .chk-list li.bad  { color: #e07070; }  .chk-list li.bad::before  { content: "✗"; color: var(--red); }
-.btn-export { width: 100%; padding: 13px; background: var(--blue1);
-  border: none; border-radius: 8px; color: #fff; font-size: 1rem; font-weight: 700;
-  letter-spacing: .3px; transition: background .2s; }
+.btn-export { display: inline-block; width: auto; padding: 6px 14px;
+  background: var(--blue1); border: none; border-radius: 7px; color: #fff;
+  font-size: .9rem; font-weight: 700; letter-spacing: .2px;
+  transition: background .2s; vertical-align: middle; cursor: pointer; }
 .btn-export:hover:not(:disabled) { background: #1d7fd6; }
 .btn-export:disabled { background: #1c2e40; color: var(--text3); cursor: not-allowed; }
+.exp-instruction { font-size: .95rem; color: var(--text2); line-height: 2;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 18px; margin-bottom: 14px; }
 .share-tip { background: var(--card); border: 1px solid var(--border);
   border-radius: 10px; padding: 14px 16px; margin-top: 14px; }
 .share-tip h4 { color: var(--text2); font-size: .88rem; margin-bottom: 8px; }
@@ -227,7 +231,7 @@ input  { font-family: inherit; }
 
 <div id="p-grp"    class="panel on"><div class="grp-grid" id="grp-container"></div></div>
 <div id="p-ko"     class="panel"><div id="ko-container"></div></div>
-<div id="p-export" class="panel"><div class="export-wrap"><div class="exp-card"><h3>Tipp-Status</h3><ul class="chk-list" id="chk-list"></ul></div><button class="btn-export" id="exp-btn">📥 Deinen Tippzettel herunterladen und zurücksenden</button><div class="share-tip"><h4>📊 Tagesaktuelle Rangliste</h4><p><a href="https://augo1337.github.io/wm2026-tippspiel/Rangliste.html" target="_blank" style="color:#4fc3f7;word-break:break-all">https://augo1337.github.io/wm2026-tippspiel/Rangliste.html</a><br><br>Einfach anklicken, um die aktuelle, automatische Auswertung und Rangliste einzusehen – keine App nötig, einfach im Browser öffnen.</p></div></div></div>
+<div id="p-export" class="panel"><div class="export-wrap"><div class="exp-card"><h3>Tipp-Status</h3><ul class="chk-list" id="chk-list"></ul></div><p class="exp-instruction">Deinen Tippschein <button class="btn-export" id="exp-btn">📥 hier herunterladen</button> und die im Download-Ordner befindliche JSON-Datei an <strong>Edgar Mayer</strong> per Mail zurücksenden.</p><div class="share-tip"><h4>📊 Tagesaktuelle Rangliste</h4><p><a href="https://augo1337.github.io/wm2026-tippspiel/Rangliste.html" target="_blank" style="color:#4fc3f7;word-break:break-all">https://augo1337.github.io/wm2026-tippspiel/Rangliste.html</a><br><br>Einfach anklicken, um die aktuelle, automatische Auswertung und Rangliste einzusehen – keine App nötig, einfach im Browser öffnen.</p></div></div></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
