@@ -349,7 +349,7 @@ def auswerten(df, gs_results, ko_results):
 
         pred_finale = [resp.get(c) for c in KO_COLS["F"]]
         actual_finale = ko_results.get("F", [])
-        pts_ko["F"] = calc_finale_pts(pred_finale, actual_finale)
+        pts_ko["F"] = calc_ko_pts(pred_finale, actual_finale, 20)
 
         pts_ko["P3"] = calc_p3_pts(resp.get(KO_COLS["P3"][0]), ko_results.get("P3", []))
 
@@ -972,7 +972,7 @@ function renderDetails(){
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
-  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · S16 +5 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · S16 +5 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale +20/Team · Weltmeister +25</div></div></details>${tableHtml}`;
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
