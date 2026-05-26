@@ -135,7 +135,7 @@ KO_COLS = {
     "WM":  ["[WM] Weltmeister"],
 }
 
-KO_PUNKTE = {"S16": 3, "S8": 5, "VF": 10, "HF": 15, "P3": 15}
+KO_PUNKTE = {"S16": 3, "S8": 5, "VF": 10, "HF": 15}
 
 # ============================================================
 # PUNKTE BERECHNUNG
@@ -180,6 +180,22 @@ def calc_finale_pts(pred_list, actual_set):
 
 def calc_wm_pts(pred, actual):
     return 25 if norm(pred) and norm(actual) and norm(pred) == norm(actual) else 0
+
+def calc_p3_pts(pred, actual_list):
+    """10 pts if pick is a P3 participant; +15 pts if pick is the winner (max 25)."""
+    if not norm(pred) or not actual_list:
+        return 0
+    participants = {norm(t) for t in actual_list if norm(t)}
+    if not participants:
+        return 0
+    p_norm = norm(pred)
+    if p_norm not in participants:
+        return 0
+    pts = 10
+    winner = norm(actual_list[0]) if actual_list else ""
+    if winner and p_norm == winner:
+        pts += 15
+    return pts
 
 # ============================================================
 # ERGEBNISSE EINLESEN
@@ -288,6 +304,8 @@ def auswerten(df, gs_results, ko_results):
         pred_finale = [resp.get(c) for c in KO_COLS["F"]]
         actual_finale = ko_results.get("F", [])
         pts_ko["F"] = calc_finale_pts(pred_finale, actual_finale)
+
+        pts_ko["P3"] = calc_p3_pts(resp.get(KO_COLS["P3"][0]), ko_results.get("P3", []))
 
         pts_ko["WM"] = calc_wm_pts(resp.get(KO_COLS["WM"][0]), ko_results.get("WM", [None])[0] if ko_results.get("WM") else None)
 
@@ -842,15 +860,27 @@ function renderDetails(){
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
-    if(activeTab==='WM'||activeTab==='P3'){
-      const lbl=activeTab==='WM'?'Weltmeister':'Platz 3 – Sieger';
+    if(activeTab==='WM'){
       const plCells=players.map(p=>{
-        const tip=p.ko_tipps[activeTab]||'–';
+        const tip=p.ko_tipps['WM']||'–';
         const hit=norm.length>0&&tip.toLowerCase()===norm[0];
         const miss=norm.length>0&&!hit;
         return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
       }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">${lbl}</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
+    } else if(activeTab==='P3'){
+      const winnerNorm=norm.length>0?norm[0]:'';
+      const allParticipants=new Set(norm);
+      const plCells=players.map(p=>{
+        const tip=p.ko_tipps['P3']||'–';
+        const tipLow=tip.toLowerCase();
+        const isWinner=winnerNorm&&tipLow===winnerNorm;
+        const isParticipant=allParticipants.size>0&&allParticipants.has(tipLow);
+        const cls=isWinner?'mcel-ex':isParticipant?'mcel-td':allParticipants.size>0?'mcel-ms':'mcel-op';
+        return `<td class="mcel ${cls}">${tip}</td>`;
+      }).join('');
+      const bothTeams=norm.length>=2?`${actual[0]} / ${actual[1]}`:actual[0]||'–';
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Platz 3 – Teilnehmer</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${bothTeams}</td>${plCells}</tr></tbody></table></div>`;
     } else {
       const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
       const maxLen=Math.max(...tips.map(t=>t.length),0);
@@ -872,7 +902,7 @@ function renderDetails(){
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
-  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>S16 +3 · S8 +5 · VF +10 · HF +15 · Platz 3 +15 · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>S16 +3 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
