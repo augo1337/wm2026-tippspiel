@@ -427,7 +427,36 @@ function calcQualifiers() {
   const thirds  = GROUPS.map(g => ({...tables[g][2], team:tables[g][2].n, src:`3. Gr.${g}`, g, pos:3}))
     .sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
   const best8 = thirds.slice(0,8).map(t=>({...t, src:`3. Gr.${t.g}`, isThird:true}));
-  return [...winners, ...runners, ...best8];
+
+  // Erlaubte Gruppen je Drittplatz-Slot (pos 24–31) – lt. offiziellem FIFA 2026 Bracket
+  // Jeder Slot darf keine gleiche Gruppe wie sein Gegner (Gruppensieger) haben
+  const ELIGIBLE = [
+    ['A','B','C','D','F'],  // pos24: vs 1.E
+    ['C','D','F','G','H'],  // pos25: vs 1.I
+    ['C','E','F','H','I'],  // pos26: vs 1.A
+    ['E','H','I','J','K'],  // pos27: vs 1.L
+    ['B','E','F','I','J'],  // pos28: vs 1.D
+    ['A','E','H','I','J'],  // pos29: vs 1.G
+    ['E','F','G','I','J'],  // pos30: vs 1.B
+    ['D','E','I','J','L'],  // pos31: vs 1.K
+  ];
+
+  // Backtracking: ordne best8 den Slots zu, kein Gruppenkonflikt, jedes Team nur einmal
+  const assigned = new Array(8).fill(null);
+  const used = new Array(8).fill(false);
+  (function bt(si) {
+    if (si === 8) return true;
+    for (let i = 0; i < 8; i++) {
+      if (!used[i] && ELIGIBLE[si].includes(best8[i].g)) {
+        assigned[si] = best8[i]; used[i] = true;
+        if (bt(si + 1)) return true;
+        used[i] = false; assigned[si] = null;
+      }
+    }
+    return false;
+  })(0);
+
+  return [...winners, ...runners, ...assigned.map(t => t || {team:'?', src:'3. (TBD)', g:'?', pos:3})];
 }
 
 function getMatchTeams(roundId, matchIdx) {
