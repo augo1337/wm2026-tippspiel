@@ -812,7 +812,7 @@ document.getElementById('exp-btn').addEventListener('click', () => {
     VF:  [...koPick.VF],
     HF:  [...koPick.HF],
     P3:  p3Pick || '',
-    F:   [...koPick.F],   // Finalisten
+    F:   [koPick.HF[0] || '', koPick.HF[1] || ''],  // beide HF-Gewinner = Finalisten
     WM:  koPick.F[0] || '',
   };
   const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});

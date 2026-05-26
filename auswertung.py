@@ -130,11 +130,12 @@ KO_COLS = {
     "S8":  [f"[S8] Weiterkommer {i}"  for i in range(1, 9)],
     "VF":  [f"[VF] Weiterkommer {i}"  for i in range(1, 5)],
     "HF":  [f"[HF] Weiterkommer {i}"  for i in range(1, 3)],
+    "P3":  ["[P3] Dritter Platz"],
     "F":   ["[F] Finalist 1", "[F] Finalist 2"],
     "WM":  ["[WM] Weltmeister"],
 }
 
-KO_PUNKTE = {"S16": 3, "S8": 5, "VF": 10, "HF": 15}
+KO_PUNKTE = {"S16": 3, "S8": 5, "VF": 10, "HF": 15, "P3": 15}
 
 # ============================================================
 # PUNKTE BERECHNUNG
@@ -197,7 +198,7 @@ def read_ergebnisse(path):
 
     # KO-Runden
     ko_results = {}
-    for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+    for runde in ["S16", "S8", "VF", "HF", "P3", "F", "WM"]:
         if runde in wb.sheetnames:
             sheet = wb[runde]
             teams = []
@@ -219,8 +220,8 @@ def json_to_row(data):
     for key, val in data.get("gruppenphase", {}).items():
         row[key] = val
     for runde_id, cols in KO_COLS.items():
-        if runde_id == "WM":
-            row[cols[0]] = data.get("WM", "")
+        if runde_id in ("WM", "P3"):
+            row[cols[0]] = data.get(runde_id, "")
         else:
             teams = data.get(runde_id, [])
             if not isinstance(teams, list):
@@ -299,6 +300,7 @@ def auswerten(df, gs_results, ko_results):
             "S8":  pts_ko.get("S8",  0),
             "VF":  pts_ko.get("VF",  0),
             "HF":  pts_ko.get("HF",  0),
+            "P3":  pts_ko.get("P3",  0),
             "Finale": pts_ko.get("F", 0),
             "Weltmeister": pts_ko.get("WM", 0),
             "_detail": detail_gruppe,
@@ -342,8 +344,8 @@ def write_rangliste(wb, rows):
 
     headers = ["Platz", "Name", "Gesamt", "Gruppenphase",
                "Sechzehntelfinale", "Achtelfinale", "Viertelfinale",
-               "Halbfinale", "Finale", "Weltmeister"]
-    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 10, 14]
+               "Halbfinale", "Platz 3", "Finale", "Weltmeister"]
+    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 10, 10, 14]
 
     # Header
     for c, (h, w) in enumerate(zip(headers, col_widths), 1):
@@ -359,7 +361,7 @@ def write_rangliste(wb, rows):
     for r in rows:
         row_num = r["Platz"] + 1
         values = [r["Platz"], r["Name"], r["Gesamt"], r["Gruppenphase"],
-                  r["S16"], r["S8"], r["VF"], r["HF"], r["Finale"], r["Weltmeister"]]
+                  r["S16"], r["S8"], r["VF"], r["HF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
 
         platz_fill = CLR_LIGHT
         if r["Platz"] == 1: platz_fill = CLR_GOLD
@@ -562,7 +564,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
 
         ko_tipps = {}
         for runde, cols in KO_COLS.items():
-            if runde == "WM":
+            if runde in ("WM", "P3"):
                 ko_tipps[runde] = _clean(r["_resp"].get(cols[0]))
             else:
                 ko_tipps[runde] = [_clean(r["_resp"].get(c)) for c in cols]
@@ -572,6 +574,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             "gesamt": r["Gesamt"], "gruppe": r["Gruppenphase"],
             "s16": r["S16"], "s8": r["S8"],
             "vf": r["VF"], "hf": r["HF"],
+            "p3": r.get("P3", 0),
             "finale": r["Finale"], "wm": r["Weltmeister"],
             "spiele": spiele, "ko_tipps": ko_tipps,
         })
@@ -697,6 +700,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .mtx-ko td:nth-child(-n+2){position:sticky;z-index:2;background:#152438}
 .mtx-ko th:nth-child(1),.mtx-ko td:nth-child(1){left:0;min-width:36px;max-width:36px}
 .mtx-ko th:nth-child(2),.mtx-ko td:nth-child(2){left:36px;box-shadow:4px 0 8px rgba(0,0,0,.45)}
+.leg-box{background:#182d45;border:1px solid #2e4e72;border-radius:8px;padding:8px 14px;margin-bottom:10px;font-size:.78rem;cursor:pointer}
+.leg-box summary{color:#a0c0de;font-weight:600;user-select:none;list-style:none}
+.leg-box summary::-webkit-details-marker{display:none}
+.leg-inner{margin-top:8px;display:flex;flex-direction:column;gap:6px;color:#7a9bbe;line-height:1.7}
+.leg-inner span{color:#eef5fd}
 """
 
     # ── JavaScript (plain string – kein f-string-Escaping) ─
@@ -704,7 +712,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
 const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
-  ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
+  ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],
+  ["P3","Platz 3","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set(DATA.players.map(p=>p.name));
 
 function badge(pts){
@@ -765,7 +774,7 @@ function renderRanking(){
       <td class="pl">${med} ${p.platz}.</td><td class="nm">${p.name}</td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
-      <td>${p.hf}</td><td>${p.finale}</td><td>${p.wm}</td>
+      <td>${p.hf}</td><td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
     </tr>`;
   }).join("");
 }
@@ -796,7 +805,7 @@ function renderDetails(){
     `<span class="gtab${activeTab==='Gruppen'?' active':''}" onclick="setTab('Gruppen')">Gruppen</span>`,
     `<span style="color:#2e4e72;padding:0 4px">│</span>`,
     ...KO_ROUNDS.map(([k,lbl])=>{
-      const short={S16:'S16',S8:'S8',VF:'VF',HF:'HF',F:'Finale',WM:'WM'}[k]||k;
+      const short={S16:'S16',S8:'S8',VF:'VF',HF:'HF',P3:'P3',F:'Finale',WM:'WM'}[k]||k;
       return `<span class="gtab${k===activeTab?' active':''}" onclick="setTab('${k}')">${short}</span>`;
     })
   ].join('');
@@ -833,32 +842,37 @@ function renderDetails(){
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
-    if(activeTab==='WM'){
+    if(activeTab==='WM'||activeTab==='P3'){
+      const lbl=activeTab==='WM'?'Weltmeister':'Platz 3 – Sieger';
       const plCells=players.map(p=>{
-        const tip=p.ko_tipps['WM']||'–';
+        const tip=p.ko_tipps[activeTab]||'–';
         const hit=norm.length>0&&tip.toLowerCase()===norm[0];
         const miss=norm.length>0&&!hit;
         return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
       }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'?'}</td>${plCells}</tr></tbody></table></div>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">${lbl}</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
     } else {
       const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
       const maxLen=Math.max(...tips.map(t=>t.length),0);
+      const isFinale=activeTab==='F';
+      const rowLabels=isFinale?['Finalist 1','Finalist 2']:null;
+      const colHdr=isFinale?'Finalist':'Weitergekommen';
       const rows=maxLen===0
         ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Runde noch nicht begonnen</td></tr>`
         :Array.from({length:maxLen},(_,i)=>{
           const plCells=players.map((p,pi)=>{
             const tip=tips[pi][i]||'–';
-            const hit=norm.length>i&&tip.toLowerCase()===norm[i];
-            const miss=norm.length>i&&!hit;
+            const hit=isFinale?norm.includes(tip.toLowerCase())&&norm.length>0:norm.length>i&&tip.toLowerCase()===norm[i];
+            const miss=norm.length>0&&!hit&&tip!=='–';
             return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
           }).join('');
-          return `<tr><td class="mi" style="text-align:center;width:32px">${i+1}.</td><td class="mi-t">${actual[i]||'–'}</td>${plCells}</tr>`;
+          const rowLbl=rowLabels?rowLabels[i]:`${i+1}.`;
+          return `<tr><td class="mi" style="white-space:nowrap;padding:5px 8px;min-width:80px;font-size:.78rem;color:#7a9bbe">${rowLbl}</td><td class="mi-t">${actual[i]||'–'}</td>${plCells}</tr>`;
         }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="width:32px">#</th><th class="mh-l">Weitergekommen</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
-  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div>${tableHtml}`;
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>S16 +3 · S8 +5 · VF +10 · HF +15 · Platz 3 +15 · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
@@ -908,7 +922,7 @@ renderAll();
     <table class="rtbl">
       <thead><tr>
         <th>Platz</th><th>Name</th><th>Gesamt</th><th>Gruppe</th>
-        <th>S16</th><th>AF</th><th>VF</th><th>HF</th><th>Finale</th><th>WM</th>
+        <th>S16</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
       </tr></thead>
       <tbody id="rankBody"></tbody>
     </table>
