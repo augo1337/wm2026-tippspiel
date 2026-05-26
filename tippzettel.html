@@ -353,7 +353,7 @@ const S16_PAIRS = [
   [10,31],  // Sp.16: 04.07. 03:30 – 1K vs Dritter (D/E/I/J/L)
 ];
 const KO_ROUNDS = [
-  {id:"S16",label:"Sechzehntelfinale",pts:3,  n:16, dates:[
+  {id:"S16",label:"Sechzehntelfinale",pts:5,  n:16, dates:[
     "28.06.","29.06.","29.06.","30.06.",
     "30.06.","30.06.","01.07.",
     "01.07.","01.07.","02.07.",
@@ -634,7 +634,7 @@ function renderKo() {
   ).join('');
 
   let html = `<details class="q-box" style="margin-bottom:20px">
-    <summary class="q-box-title" style="cursor:pointer">▸ Vorhergesagte 32 Qualifikanten</summary>
+    <summary class="q-box-title" style="cursor:pointer">▸ Vorhergesagte 32 Qualifikanten <span style="font-size:.78rem;color:#a0c0de;font-weight:400">(je +3 Pkt bei Treffer)</span></summary>
     <div class="q-chips" style="margin-top:10px">${qChips}</div>
   </details>`;
 

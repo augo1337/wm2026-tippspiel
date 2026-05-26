@@ -135,7 +135,7 @@ KO_COLS = {
     "WM":  ["[WM] Weltmeister"],
 }
 
-KO_PUNKTE = {"S16": 3, "S8": 5, "VF": 10, "HF": 15}
+KO_PUNKTE = {"S16": 5, "S8": 5, "VF": 10, "HF": 15}
 
 # ============================================================
 # PUNKTE BERECHNUNG
@@ -197,6 +197,52 @@ def calc_p3_pts(pred, actual_list):
         pts += 15
     return pts
 
+def calc_qualifiers_from_predictions(detail_gruppe):
+    """Returns a set of 32 team names predicted to qualify from the group stage,
+    derived from the player's group score predictions (same logic as tippzettel.html)."""
+    def build_table(group_id):
+        st = {}
+        for m in GRUPPENSPIELE:
+            if m["gruppe"] != group_id:
+                continue
+            for t in (m["heim"], m["gast"]):
+                if t not in st:
+                    st[t] = {"name": t, "pts": 0, "gd": 0, "gf": 0}
+        for m in GRUPPENSPIELE:
+            if m["gruppe"] != group_id:
+                continue
+            d = detail_gruppe.get(m["id"], {})
+            r = parse_score(d.get("tipp"))
+            if r is None:
+                continue
+            hg, ag = r
+            h, a = m["heim"], m["gast"]
+            st[h]["gf"] += hg; st[h]["gd"] += hg - ag
+            st[a]["gf"] += ag; st[a]["gd"] += ag - hg
+            if hg > ag:   st[h]["pts"] += 3
+            elif hg < ag: st[a]["pts"] += 3
+            else:         st[h]["pts"] += 1; st[a]["pts"] += 1
+        return sorted(st.values(), key=lambda t: (-t["pts"], -t["gd"], -t["gf"], t["name"]))
+
+    qualifiers = set()
+    thirds = []
+    for g in ["A","B","C","D","E","F","G","H","I","J","K","L"]:
+        table = build_table(g)
+        if len(table) >= 1: qualifiers.add(table[0]["name"])
+        if len(table) >= 2: qualifiers.add(table[1]["name"])
+        if len(table) >= 3:
+            t3 = table[2]
+            thirds.append({"team": t3["name"], "pts": t3["pts"], "gd": t3["gd"], "gf": t3["gf"]})
+    thirds.sort(key=lambda t: (-t["pts"], -t["gd"], -t["gf"], t["team"]))
+    for t in thirds[:8]:
+        qualifiers.add(t["team"])
+    return qualifiers
+
+def calc_gq_pts(pred_set, actual_list):
+    actual = {norm(t) for t in actual_list if norm(t)}
+    pred   = {norm(t) for t in pred_set   if norm(t)}
+    return len(pred & actual) * 3
+
 # ============================================================
 # ERGEBNISSE EINLESEN
 # ============================================================
@@ -214,7 +260,7 @@ def read_ergebnisse(path):
 
     # KO-Runden
     ko_results = {}
-    for runde in ["S16", "S8", "VF", "HF", "P3", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "P3", "F", "WM"]:
         if runde in wb.sheetnames:
             sheet = wb[runde]
             teams = []
@@ -307,6 +353,9 @@ def auswerten(df, gs_results, ko_results):
 
         pts_ko["P3"] = calc_p3_pts(resp.get(KO_COLS["P3"][0]), ko_results.get("P3", []))
 
+        pred_qualifiers = calc_qualifiers_from_predictions(detail_gruppe)
+        pts_ko["GQ"] = calc_gq_pts(pred_qualifiers, ko_results.get("GQ", []))
+
         pts_ko["WM"] = calc_wm_pts(resp.get(KO_COLS["WM"][0]), ko_results.get("WM", [None])[0] if ko_results.get("WM") else None)
 
         total = pts_gruppe + sum(pts_ko.values())
@@ -314,6 +363,7 @@ def auswerten(df, gs_results, ko_results):
             "Name": name,
             "Gesamt": total,
             "Gruppenphase": pts_gruppe,
+            "GQ":  pts_ko.get("GQ", 0),
             "S16": pts_ko.get("S16", 0),
             "S8":  pts_ko.get("S8",  0),
             "VF":  pts_ko.get("VF",  0),
@@ -323,6 +373,7 @@ def auswerten(df, gs_results, ko_results):
             "Weltmeister": pts_ko.get("WM", 0),
             "_detail": detail_gruppe,
             "_resp": resp,
+            "_gq_pred": sorted([norm(t) for t in pred_qualifiers]),
         })
 
     rows.sort(key=lambda x: x["Gesamt"], reverse=True)
@@ -361,9 +412,9 @@ def write_rangliste(wb, rows):
     ws.sheet_view.showGridLines = False
 
     headers = ["Platz", "Name", "Gesamt", "Gruppenphase",
-               "Sechzehntelfinale", "Achtelfinale", "Viertelfinale",
+               "Gr.-Qualifikation", "Sechzehntelfinale", "Achtelfinale", "Viertelfinale",
                "Halbfinale", "Platz 3", "Finale", "Weltmeister"]
-    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 10, 10, 14]
+    col_widths = [8, 22, 10, 14, 18, 18, 14, 14, 12, 10, 10, 14]
 
     # Header
     for c, (h, w) in enumerate(zip(headers, col_widths), 1):
@@ -379,7 +430,7 @@ def write_rangliste(wb, rows):
     for r in rows:
         row_num = r["Platz"] + 1
         values = [r["Platz"], r["Name"], r["Gesamt"], r["Gruppenphase"],
-                  r["S16"], r["S8"], r["VF"], r["HF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
+                  r.get("GQ", 0), r["S16"], r["S8"], r["VF"], r["HF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
 
         platz_fill = CLR_LIGHT
         if r["Platz"] == 1: platz_fill = CLR_GOLD
@@ -590,11 +641,13 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
         players_js.append({
             "platz": r["Platz"], "name": r["Name"],
             "gesamt": r["Gesamt"], "gruppe": r["Gruppenphase"],
+            "gq": r.get("GQ", 0),
             "s16": r["S16"], "s8": r["S8"],
             "vf": r["VF"], "hf": r["HF"],
             "p3": r.get("P3", 0),
             "finale": r["Finale"], "wm": r["Weltmeister"],
             "spiele": spiele, "ko_tipps": ko_tipps,
+            "gq_teams": r.get("_gq_pred", []),
         })
 
     ko_res_js = {
@@ -729,7 +782,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
+const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Sechzehntelfinale","28.06.–04.07."],["S8","Achtelfinale","04.–07.07."],
   ["VF","Viertelfinale","09.–12.07."],["HF","Halbfinale","14.–15.07."],
   ["P3","Platz 3","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set(DATA.players.map(p=>p.name));
@@ -791,7 +844,7 @@ function renderRanking(){
     return `<tr class="${cls}" onclick="togglePlayerRow('${p.name.replace(/'/g,"\\\\'")}')">
       <td class="pl">${med} ${p.platz}.</td><td class="nm">${p.name}</td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
-      <td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
+      <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
       <td>${p.hf}</td><td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
     </tr>`;
   }).join("");
@@ -823,7 +876,7 @@ function renderDetails(){
     `<span class="gtab${activeTab==='Gruppen'?' active':''}" onclick="setTab('Gruppen')">Gruppen</span>`,
     `<span style="color:#2e4e72;padding:0 4px">│</span>`,
     ...KO_ROUNDS.map(([k,lbl])=>{
-      const short={S16:'S16',S8:'S8',VF:'VF',HF:'HF',P3:'P3',F:'Finale',WM:'WM'}[k]||k;
+      const short={GQ:'GQ',S16:'S16',S8:'S8',VF:'VF',HF:'HF',P3:'P3',F:'Finale',WM:'WM'}[k]||k;
       return `<span class="gtab${k===activeTab?' active':''}" onclick="setTab('${k}')">${short}</span>`;
     })
   ].join('');
@@ -857,6 +910,23 @@ function renderDetails(){
       return `<td><b>${pts}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${n}/72)</span></td>`;
     }).join('');
     tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppenphase gesamt:</td>${subs}</tr></tfoot></table></div>`;
+  } else if(activeTab==='GQ'){
+    const gqActual=DATA.ko['GQ']||[];
+    const rows=gqActual.length===0
+      ?`<tr><td colspan="${players.length+1}" style="text-align:center;padding:24px;color:#546e7a">Gruppenphase noch nicht abgeschlossen</td></tr>`
+      :gqActual.map(team=>{
+        const plCells=players.map(p=>{
+          const pred=(p.gq_teams||[]);
+          const hit=pred.includes(team);
+          return `<td class="mcel ${hit?'mcel-ex':'mcel-ms'}">${hit?'✓':'✗'}</td>`;
+        }).join('');
+        return `<tr><td class="mi-t">${team}</td>${plCells}</tr>`;
+      }).join('');
+    const subs=players.map(p=>{
+      const hits=(p.gq_teams||[]).filter(t=>gqActual.includes(t)).length;
+      return `<td><b>${hits*3}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/32)</span></td>`;
+    }).join('');
+    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Qualifikant (je +3 Pkt)</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="sub-lbl">GQ gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
@@ -902,7 +972,7 @@ function renderDetails(){
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
     }
   }
-  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>S16 +3 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
+  cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · S16 +5 · S8 +5 · VF +10 · HF +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale (beide richtig) +20 · Weltmeister +25</div></div></details>${tableHtml}`;
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
@@ -952,7 +1022,7 @@ renderAll();
     <table class="rtbl">
       <thead><tr>
         <th>Platz</th><th>Name</th><th>Gesamt</th><th>Gruppe</th>
-        <th>S16</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
+        <th>GQ</th><th>S16</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
       </tr></thead>
       <tbody id="rankBody"></tbody>
     </table>
