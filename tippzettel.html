@@ -202,6 +202,27 @@ input  { font-family: inherit; }
   .panel { padding: 14px 16px; }
   .matches-grid { grid-template-columns: 1fr; }
 }
+/* ── Print / PDF ── */
+#print-view { display: none; }
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff !important; color: #111 !important; font-size: 10pt; font-family: Arial, sans-serif; }
+  .hdr, .namebar, .tabs, .panel { display: none !important; }
+  #print-view { display: block !important; padding: 8mm 10mm; }
+  .pv-hdr { font-size: 15pt; font-weight: 800; margin-bottom: 2pt; color: #1a3a5c; }
+  .pv-sub { font-size: 8.5pt; color: #666; margin-bottom: 12pt; border-bottom: 1pt solid #ccc; padding-bottom: 4pt; }
+  .pv-sec { font-size: 11pt; font-weight: 700; background: #dde8f4; padding: 3pt 6pt; margin: 8pt 0 3pt; color: #1a3a5c; }
+  .pv-grp { font-size: 9pt; font-weight: 600; background: #f0f4f8; padding: 2pt 6pt; margin: 4pt 0 1pt; }
+  .pv-row { font-size: 8.5pt; display: flex; gap: 8pt; padding: 1.5pt 6pt; border-bottom: .3pt solid #e0e0e0; }
+  .pv-row:nth-child(odd) { background: #fafafa; }
+  .pv-match { flex: 1; }
+  .pv-score { font-weight: 700; min-width: 35pt; color: #1a6ec7; }
+  .pv-date { color: #888; font-size: 8pt; min-width: 50pt; }
+  .pv-ko-row { font-size: 8.5pt; padding: 2pt 6pt; display: flex; gap: 8pt; border-bottom: .3pt solid #e0e0e0; }
+  .pv-ko-row:nth-child(odd) { background: #fafafa; }
+  .pv-ko-lbl { width: 100pt; color: #555; font-weight: 600; flex-shrink: 0; }
+  .pv-ko-val { flex: 1; }
+}
 </style>
 </head>
 <body>
@@ -231,7 +252,7 @@ input  { font-family: inherit; }
 
 <div id="p-grp"    class="panel on"><div class="grp-grid" id="grp-container"></div></div>
 <div id="p-ko"     class="panel"><div id="ko-container"></div></div>
-<div id="p-export" class="panel"><div class="export-wrap"><div class="exp-card"><h3>Tipp-Status</h3><ul class="chk-list" id="chk-list"></ul></div><p class="exp-instruction">Deinen Tippschein <button class="btn-export" id="exp-btn">📥 hier herunterladen</button> und die im Download-Ordner befindliche JSON-Datei an <strong>Edgar Mayer</strong> per Mail zurücksenden.</p><div class="share-tip"><h4>📊 Tagesaktuelle Rangliste</h4><p><a href="https://augo1337.github.io/wm2026-tippspiel/Rangliste.html" target="_blank" style="color:#4fc3f7;word-break:break-all">https://augo1337.github.io/wm2026-tippspiel/Rangliste.html</a><br><br>Einfach anklicken, um die aktuelle, automatische Auswertung und Rangliste einzusehen – keine App nötig, einfach im Browser öffnen.</p></div></div></div>
+<div id="p-export" class="panel"><div class="export-wrap"><div class="exp-card"><h3>Tipp-Status</h3><ul class="chk-list" id="chk-list"></ul></div><p class="exp-instruction">Deinen Tippschein <button class="btn-export" id="exp-btn">📥 hier herunterladen</button> und die im Download-Ordner befindliche JSON-Datei an <strong>Edgar Mayer</strong> per Mail zurücksenden.</p><p class="exp-instruction" style="margin-top:0">Zur persönlichen Archivierung: <button class="btn-export" onclick="savePDF()">🖨️ Als PDF speichern</button> – öffnet den Druckdialog, dort „Als PDF speichern" wählen.</p><div class="share-tip"><h4>📊 Tagesaktuelle Rangliste</h4><p>Ein Link zur tagesaktuellen, automatisierten Rangliste wird von Edgar Mayer kurz vor WM-Start gesendet.</p></div></div></div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -829,6 +850,28 @@ document.getElementById('exp-btn').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════════════════
 renderGroups();
 renderExport();
+function buildPrintView() {
+  const name = document.getElementById('pname').value.trim() || '(kein Name)';
+  const now = new Date().toLocaleString('de-DE');
+  let html = `<div class="pv-hdr">WM 2026 Tippspiel – ${name}</div><div class="pv-sub">Exportiert am ${now}</div>`;
+  html += '<div class="pv-sec">Gruppenphase</div>';
+  for (const g of GROUPS) {
+    html += `<div class="pv-grp">Gruppe ${g}</div>`;
+    for (const m of MATCHES.filter(x => x.g === g)) {
+      const sc = scores[m.id] || '–';
+      html += `<div class="pv-row"><span class="pv-date">${m.d} ${m.t}</span><span class="pv-match">${m.h} vs ${m.a}</span><span class="pv-score">${sc}</span></div>`;
+    }
+  }
+  html += '<div class="pv-sec">KO-Runden</div>';
+  for (const r of KO_ROUNDS) {
+    const picks = koPick[r.id].filter(Boolean);
+    html += `<div class="pv-ko-row"><span class="pv-ko-lbl">${r.label}</span><span class="pv-ko-val">${picks.length ? picks.join(', ') : '–'}</span></div>`;
+  }
+  html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Platz 3</span><span class="pv-ko-val">${p3Pick || '–'}</span></div>`;
+  document.getElementById('print-view').innerHTML = html;
+}
+function savePDF() { buildPrintView(); window.print(); }
 </script>
+<div id="print-view"></div>
 </body>
 </html>
