@@ -21,6 +21,7 @@ import os
 import subprocess
 import requests
 import openpyxl
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 BASE         = Path(__file__).parent
@@ -28,6 +29,62 @@ ERGEBNISSE   = BASE / "Ergebnisse.xlsx"
 TIPPS_ORDNER = BASE / "Tipps"
 
 # ──────────────────────────────────────────────────────────────
+# SPIELPLAN (Anstoß-Zeiten in UTC; Alle Zeiten CEST = UTC+2)
+# Gruppenphase + KO bis Finale – wird für Zeitfenster-Check genutzt
+# ──────────────────────────────────────────────────────────────
+def _u(mo, d, h, mi=0):
+    return datetime(2026, mo, d, h, mi, tzinfo=timezone.utc)
+
+MATCH_KICKOFFS_UTC = [
+    # Gruppenphase (11.06.–28.06.)
+    _u(6,11,19),                                              # 11.06
+    _u(6,12, 2), _u(6,12,19),                                # 12.06
+    _u(6,13, 1), _u(6,13,19), _u(6,13,22),                  # 13.06
+    _u(6,14, 1), _u(6,14, 4), _u(6,14,17), _u(6,14,20), _u(6,14,23),  # 14.06
+    _u(6,15, 2), _u(6,15,16), _u(6,15,19), _u(6,15,22),    # 15.06
+    _u(6,16, 1), _u(6,16,19), _u(6,16,22),                  # 16.06
+    _u(6,17, 1), _u(6,17, 4), _u(6,17,17), _u(6,17,20), _u(6,17,23),  # 17.06
+    _u(6,18, 2), _u(6,18,16), _u(6,18,19), _u(6,18,22),    # 18.06
+    _u(6,19, 1), _u(6,19,19), _u(6,19,22),                  # 19.06
+    _u(6,20, 0,30), _u(6,20, 3), _u(6,20,17), _u(6,20,20), # 20.06
+    _u(6,21, 0), _u(6,21, 4), _u(6,21,16), _u(6,21,19), _u(6,21,22),  # 21.06
+    _u(6,22, 1), _u(6,22,17), _u(6,22,21),                  # 22.06
+    _u(6,23, 0), _u(6,23, 3), _u(6,23,17), _u(6,23,20), _u(6,23,23),  # 23.06
+    _u(6,24, 2), _u(6,24,19), _u(6,24,22),                  # 24.06
+    _u(6,25, 1), _u(6,25,20), _u(6,25,23),                  # 25.06
+    _u(6,26, 2), _u(6,26,19),                                # 26.06
+    _u(6,27, 0), _u(6,27, 3), _u(6,27,21), _u(6,27,23,30), # 27.06
+    _u(6,28, 2),                                             # 28.06 letzte Gruppenspiele
+    # KO-Runden (28.06.–19.07.)
+    _u(6,28,19),                                             # S16 Tag 1
+    _u(6,29,17), _u(6,29,20,30),                            # S16
+    _u(6,30, 1), _u(6,30,17), _u(6,30,21),                  # S16
+    _u(7, 1, 1), _u(7, 1,16), _u(7, 1,20),                  # S16
+    _u(7, 2, 0), _u(7, 2,19), _u(7, 2,23),                  # S16
+    _u(7, 3, 3), _u(7, 3,18), _u(7, 3,22),                  # S16
+    _u(7, 4, 1,30), _u(7, 4,17), _u(7, 4,21),               # S16 Ende / S8 Beginn
+    _u(7, 5,20),                                             # S8
+    _u(7, 6, 0), _u(7, 6,19),                                # S8
+    _u(7, 7, 0), _u(7, 7,16), _u(7, 7,20),                  # S8 Ende
+    _u(7, 9,20),                                             # VF
+    _u(7,10,19),                                             # VF
+    _u(7,11,21),                                             # VF
+    _u(7,12, 1),                                             # VF Ende
+    _u(7,14,19), _u(7,15,19),                                # HF
+    _u(7,18,19),                                             # Platz 3
+    _u(7,19,19),                                             # Finale
+]
+
+# Zeitfenster: wie viele Minuten nach Anstoß darf ein Run noch als "relevant" gelten?
+# 210 min = 90 min Spielzeit + 30 min Verlängerung + 30 min Elfmeter + 30 min Puffer
+MATCH_WINDOW_MIN = 210
+
+def is_match_window():
+    """True wenn gerade ein WM-Spiel läuft oder erst kürzlich geendet hat."""
+    now = datetime.now(timezone.utc)
+    window = timedelta(minutes=MATCH_WINDOW_MIN)
+    return any(kickoff <= now <= kickoff + window for kickoff in MATCH_KICKOFFS_UTC)
+
 # API KONFIGURATION
 # ──────────────────────────────────────────────────────────────
 API_KEY  = os.environ.get("FOOTBALL_DATA_API_KEY", "f64e2692b1d34d1fb6287cbc2b6659fe")
@@ -214,6 +271,11 @@ def main():
     print("=" * 50)
     print("  WM 2026 – Automatisches Score-Update")
     print("=" * 50)
+
+    # Kein Spiel aktiv oder kürzlich beendet → Abbruch ohne API-Aufruf
+    if not is_match_window():
+        print("\nKein WM-Spiel im aktiven Zeitfenster – überspringe.")
+        sys.exit(0)
 
     # Tipps-Ordner prüfen
     if not TIPPS_ORDNER.exists() or not list(TIPPS_ORDNER.glob("*.json")):
