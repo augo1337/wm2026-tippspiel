@@ -887,7 +887,7 @@ function buildPrintView() {
 
   // S16 – 16 Weiterkommer (Gewinner der Sechzehntelfinale-Spiele)
   const s16 = koPick.S16;
-  html += `<div class="pv-ko-hdr">Sechzehntelfinale · je +5 Pkt · ${s16.filter(Boolean).length}/16 getippt</div>`;
+  html += `<div class="pv-ko-hdr">Achtelfinale-Teilnehmer · 16 Teams · je +5 Pkt · ${s16.filter(Boolean).length}/16 getippt</div>`;
   html += '<div class="pv-qs-grid">';
   s16.forEach((t, i) => {
     html += `<div class="pv-qs-item"><span class="pv-qs-src">Sp. ${i+1}</span>${t || '–'}</div>`;
@@ -896,7 +896,7 @@ function buildPrintView() {
 
   // S8 – 8 Weiterkommer
   const s8 = koPick.S8;
-  html += `<div class="pv-ko-hdr">Achtelfinale · je +10 Pkt · ${s8.filter(Boolean).length}/8 getippt</div>`;
+  html += `<div class="pv-ko-hdr">Viertelfinale-Teilnehmer · 8 Teams · je +10 Pkt · ${s8.filter(Boolean).length}/8 getippt</div>`;
   html += '<div class="pv-qs-grid">';
   s8.forEach((t, i) => {
     html += `<div class="pv-qs-item"><span class="pv-qs-src">Sp. ${i+1}</span>${t || '–'}</div>`;
@@ -905,7 +905,7 @@ function buildPrintView() {
 
   // VF – 4 Weiterkommer
   const vf = koPick.VF;
-  html += `<div class="pv-ko-hdr">Viertelfinale · je +15 Pkt · ${vf.filter(Boolean).length}/4 getippt</div>`;
+  html += `<div class="pv-ko-hdr">Halbfinale-Teilnehmer · 4 Teams · je +15 Pkt · ${vf.filter(Boolean).length}/4 getippt</div>`;
   html += '<div class="pv-qs-grid">';
   vf.forEach((t, i) => {
     html += `<div class="pv-qs-item"><span class="pv-qs-src">Sp. ${i+1}</span>${t || '–'}</div>`;
@@ -932,9 +932,9 @@ function buildPrintView() {
   html += `<div class="pv-legend">
     <div class="pv-leg-row"><span class="pv-leg-cat">Gruppenphase:</span>Exakt +4 · Tordifferenz +3 · Tendenz richtig +2 · Daneben 0 Pkt</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Gr.-Qualifikanten:</span>32 Teams, je +3 Pkt pro richtig getipptem Qualifikanten (auto-berechnet)</div>
-    <div class="pv-leg-row"><span class="pv-leg-cat">Sechzehntelfinale:</span>16 Weiterkommer, je +5 Pkt pro richtig getipptem Team</div>
-    <div class="pv-leg-row"><span class="pv-leg-cat">Achtelfinale:</span>8 Weiterkommer, je +10 Pkt pro richtig getipptem Team</div>
-    <div class="pv-leg-row"><span class="pv-leg-cat">Viertelfinale:</span>4 Weiterkommer, je +15 Pkt pro richtig getipptem Team</div>
+    <div class="pv-leg-row"><span class="pv-leg-cat">Achtelfinale-Teilnehmer:</span>16 Teams, je +5 Pkt pro richtig getipptem Team</div>
+    <div class="pv-leg-row"><span class="pv-leg-cat">Viertelfinale-Teilnehmer:</span>8 Teams, je +10 Pkt pro richtig getipptem Team</div>
+    <div class="pv-leg-row"><span class="pv-leg-cat">Halbfinale-Teilnehmer:</span>4 Teams, je +15 Pkt pro richtig getipptem Team</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Platz 3:</span>Team im Spiel +10 Pkt · Sieger richtig +15 Pkt (max. 25 Pkt)</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Finalisten:</span>Beide richtig +40 · Ein Finalist richtig +20 · Kein Treffer 0 Pkt</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Weltmeister:</span>+25 Pkt</div>
