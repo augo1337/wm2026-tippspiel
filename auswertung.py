@@ -732,6 +732,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .kt{padding:2px 10px;border-radius:12px;font-size:.75rem;background:#1c3450;border:1px solid #2e4e72;color:#eef5fd}
 .kt.hit{background:#1b5e20;border-color:#2e7d32;color:#a5d6a7}.kt.miss{background:#3e0000;border-color:#b71c1c;color:#ef9a9a}
 .foot{text-align:center;padding:18px;color:#546e7a;font-size:.78rem;border-top:1px solid #182d45}
+.fb-btn{position:fixed;top:16px;right:16px;z-index:999;background:#f5c518;color:#0a1929;border:none;border-radius:20px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:background .2s}
+.fb-btn:hover{background:#ffe066}
+.fb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:flex-start;justify-content:flex-end;padding:60px 16px 0}
+.fb-overlay.open{display:flex}
+.fb-box{background:#0e2035;border:1px solid #2e4e72;border-radius:12px;padding:18px 20px;width:320px;max-width:calc(100vw - 32px);box-shadow:0 8px 32px rgba(0,0,0,.6)}
+.fb-box h3{margin:0 0 6px;font-size:1rem;color:#f5c518}
+.fb-box p{margin:0 0 10px;font-size:.78rem;color:#7a9bbe}
+.fb-box textarea{width:100%;box-sizing:border-box;background:#07151f;border:1px solid #2e4e72;border-radius:6px;color:#eef5fd;font-size:.85rem;padding:8px;resize:vertical;min-height:100px;outline:none}
+.fb-box textarea:focus{border-color:#f5c518}
+.fb-actions{display:flex;gap:8px;margin-top:10px}
+.fb-send{flex:1;background:#f5c518;color:#0a1929;border:none;border-radius:8px;padding:8px;font-weight:700;cursor:pointer;font-size:.85rem}
+.fb-send:hover{background:#ffe066}
+.fb-cancel{background:#1c3450;color:#7a9bbe;border:1px solid #2e4e72;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:.85rem}
+.fb-cancel:hover{color:#eef5fd}
 @media(max-width:600px){.section{padding:12px}.filter-bar{padding:10px 12px}.pbody{padding:12px}}
 .gt-bar{display:flex;flex-wrap:wrap;gap:5px;padding:10px 0 8px}
 .mtx-wrap{overflow-x:auto}
@@ -1031,9 +1045,28 @@ renderAll();
   <div id="detailContainer"></div>
 </div>
 <div class="foot">Generiert am {ts} · WM 2026 Tippspiel</div>
+<button class="fb-btn" onclick="document.getElementById('fbOverlay').classList.add('open')">💬 Feedback</button>
+<div class="fb-overlay" id="fbOverlay" onclick="if(event.target===this)closeFb()">
+  <div class="fb-box">
+    <h3>Feedback &amp; Verbesserungsvorschläge</h3>
+    <p>Ideen, Wünsche oder Fehler? Schreib es kurz auf – öffnet deinen Mail-Client.</p>
+    <textarea id="fbText" placeholder="Dein Feedback..."></textarea>
+    <div class="fb-actions">
+      <button class="fb-send" onclick="sendFb()">📧 Senden</button>
+      <button class="fb-cancel" onclick="closeFb()">Abbrechen</button>
+    </div>
+  </div>
+</div>
 <script>
 const DATA={data_json};
 {JS}
+function closeFb(){{document.getElementById('fbOverlay').classList.remove('open');}}
+function sendFb(){{
+  const txt=document.getElementById('fbText').value.trim();
+  if(!txt)return;
+  window.location.href='mailto:timo.mayer@sap.com?subject=WM%202026%20Tippspiel%20-%20Feedback&body='+encodeURIComponent(txt);
+  closeFb();
+}}
 </script>
 </body></html>"""
 
