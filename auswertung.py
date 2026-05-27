@@ -660,6 +660,46 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
     n       = len(rows)
     data_json = _json.dumps({"players": players_js, "ko": ko_res_js}, ensure_ascii=False)
 
+    # ── History laden + aktualisieren ────────────────────────
+    import re as _re, calendar as _cal
+    _history = []
+    if Path(out_path).exists():
+        try:
+            _old_html = Path(out_path).read_text(encoding='utf-8')
+            _hm = _re.search(r'const HISTORY=(\[.*?\]);', _old_html, _re.DOTALL)
+            if _hm:
+                _history = _json.loads(_hm.group(1))
+        except Exception:
+            _history = []
+    _curr_pts = {r["Name"]: r["Gesamt"] for r in rows}
+    if not _history or _history[-1].get("pts") != _curr_pts:
+        _history.append({"ts": datetime.now().strftime("%d.%m %H:%M"), "pts": _curr_pts})
+    _history = _history[-120:]
+    history_json = _json.dumps(_history, ensure_ascii=False)
+
+    # ── Live-Spielplan für JS-Banner ──────────────────────────
+    _live_sched = []
+    for _lm in GRUPPENSPIELE:
+        try:
+            _ld, _lmo = (int(x) for x in _lm["datum"].rstrip('.').split('.')[:2])
+            _lhh, _lmi = (int(x) for x in (_lm.get("uhrzeit") or "21:00").split(':'))
+            _l_utc = datetime(2026, _lmo, _ld, _lhh, _lmi) - timedelta(hours=2)
+            _live_sched.append([int(_cal.timegm(_l_utc.timetuple())) * 1000,
+                                 f"{_lm['heim']} vs {_lm['gast']}", 120])
+        except Exception:
+            pass
+    for (_lmo2, _ld2, _lh2, _lmi2) in [
+        (6,28,19,0),(6,29,17,0),(6,29,20,30),(6,30,1,0),(6,30,17,0),(6,30,21,0),
+        (7,1,1,0),(7,1,16,0),(7,1,20,0),(7,2,0,0),(7,2,19,0),(7,2,23,0),
+        (7,3,3,0),(7,3,18,0),(7,3,22,0),(7,4,1,30),(7,4,17,0),(7,4,21,0),
+        (7,5,20,0),(7,6,0,0),(7,6,19,0),(7,7,0,0),(7,7,16,0),(7,7,20,0),
+        (7,9,20,0),(7,10,19,0),(7,11,21,0),(7,12,1,0),
+        (7,14,19,0),(7,15,19,0),(7,18,19,0),(7,19,19,0),
+    ]:
+        _live_sched.append([int(_cal.timegm((2026, _lmo2, _ld2, _lh2, _lmi2, 0))) * 1000,
+                             "KO-Spiel", 210])
+    live_sched_json = _json.dumps(_live_sched, ensure_ascii=False)
+
     # ── CSS (plain string – keine f-string-Escapes nötig) ─
     CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
@@ -788,6 +828,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .leg-box summary::-webkit-details-marker{display:none}
 .leg-inner{margin-top:8px;display:flex;flex-direction:column;gap:6px;color:#7a9bbe;line-height:1.7}
 .leg-inner span{color:#eef5fd}
+.live-banner{display:none;background:linear-gradient(90deg,#1a0808,#250c0c);border-bottom:2px solid #c62828;padding:7px 24px;align-items:center;gap:10px;font-size:.83rem}.live-banner.visible{display:flex}
+.live-dot{width:9px;height:9px;background:#e53935;border-radius:50%;flex-shrink:0;animation:pulse-live 1.2s ease-in-out infinite}
+@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
+.live-txt{color:#ffcdd2;font-weight:700}.live-match{color:#ef9a9a}
+.next-upd{font-size:.72rem;color:#546e7a;padding:3px 24px 5px;background:#0e1e30}
+.chart-section{padding:16px 24px}.chart-wrap{background:#182d45;border:1px solid #2e4e72;border-radius:10px;padding:16px}
+.chart-title{font-size:.85rem;font-weight:700;color:#f5c518;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.arr-up{color:#66bb6a;font-size:.72rem;font-weight:700;margin-right:1px}
+.arr-dn{color:#ef5350;font-size:.72rem;font-weight:700;margin-right:1px}
+.arr-eq{color:#3a5f84;font-size:.72rem;margin-right:1px}
+@media(max-width:600px){
+  .section,.chart-section{padding:12px}
+  .filter-bar,.hdr{padding:10px 12px}
+  .stats{padding:10px 12px;gap:8px}
+  .stat-box{flex:1;min-width:calc(50% - 8px);padding:8px 10px}
+  .stat-val{font-size:1.1rem}
+  .rtbl th,.rtbl td{padding:5px 5px;font-size:.77rem}
+  .mtx-grp th:nth-child(2),.mtx-grp td:nth-child(2){min-width:105px;max-width:105px}
+  .next-upd{padding:3px 12px 5px}
+  .fb-btn{top:10px;right:10px;padding:6px 11px;font-size:.75rem}}
 """
 
     # ── JavaScript (plain string – kein f-string-Escaping) ─
@@ -849,12 +909,22 @@ function togglePlayerDrop(name,checked){
 function selectAll(){DATA.players.forEach(p=>selected.add(p.name));renderAll();}
 function selectNone(){selected.clear();renderAll();}
 
+function getRankArrow(name){
+  if(!HISTORY||HISTORY.length<2)return '';
+  const prev=HISTORY[HISTORY.length-2].pts,curr=HISTORY[HISTORY.length-1].pts;
+  const rank=obj=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).findIndex(([n])=>n===name);
+  const pr=rank(prev),cr=rank(curr);
+  if(pr<0||cr<0)return '';
+  if(cr<pr)return '<span class="arr-up">↑</span>';
+  if(cr>pr)return '<span class="arr-dn">↓</span>';
+  return '<span class="arr-eq">=</span>';
+}
 function renderRanking(){
   document.getElementById("rankBody").innerHTML=DATA.players.map(p=>{
     const med=p.platz<=3?MEDALS[p.platz-1]:"";
     const cls=[p.platz<=3?`r${p.platz}`:"",selected.has(p.name)?"sel":""].filter(Boolean).join(" ");
     return `<tr class="${cls}" onclick="togglePlayerRow('${p.name.replace(/'/g,"\\\\'")}')">
-      <td class="pl">${med} ${p.platz}.</td><td class="nm">${p.name}</td>
+      <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name}</td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
       <td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
@@ -989,8 +1059,61 @@ function renderDetails(){
 
 function setTab(tab){activeTab=tab;renderDetails();}
 
+function checkLiveMatch(){
+  const now=Date.now();
+  const active=LIVE_SCHED.find(s=>now>=s[0]&&now<=s[0]+s[2]*60000);
+  const banner=document.getElementById('liveBanner');
+  const matchTxt=document.getElementById('liveMatch');
+  if(active){banner.classList.add('visible');matchTxt.textContent=active[1];}
+  else{banner.classList.remove('visible');}
+}
+function renderNextUpdate(){
+  const el=document.getElementById('nextUpd');
+  if(!el)return;
+  const now=Date.now();
+  const future=LIVE_SCHED.filter(s=>s[0]>now).sort((a,b)=>a[0]-b[0]);
+  if(!future.length){el.textContent='';return;}
+  const next=future[0];
+  const d=new Date(next[0]);
+  const dateStr=d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Berlin'});
+  el.textContent='Nächstes Spiel: '+next[1]+' · '+dateStr+' Uhr (MESZ) · Update ~30 Min nach Spielende';
+}
+function renderChart(){
+  if(!HISTORY||HISTORY.length<2)return;
+  const el=document.getElementById('chartWrap');
+  if(!el)return;
+  const labels=HISTORY.map(h=>h.ts);
+  const allNames=Object.keys(HISTORY[HISTORY.length-1].pts||{});
+  const colors=['#4fc3f7','#f5c518','#66bb6a','#ef5350','#ab47bc','#ffa726','#26c6da','#d4e157','#ec407a','#42a5f5','#26a69a','#ff7043'];
+  const datasets=allNames.map((name,i)=>({
+    label:name,
+    data:HISTORY.map(h=>h.pts[name]!==undefined?h.pts[name]:null),
+    borderColor:colors[i%colors.length],
+    backgroundColor:colors[i%colors.length]+'22',
+    borderWidth:2,tension:.35,
+    pointRadius:HISTORY.length>30?1:3,
+    spanGaps:true
+  }));
+  el.innerHTML='<canvas id="ptChart"></canvas>';
+  new Chart(document.getElementById('ptChart'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#a0c0de',font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'}},
+        y:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'}}
+      }
+    }
+  });
+}
 function renderAll(){renderRanking();renderDropdown();renderDetails();}
 renderAll();
+checkLiveMatch();
+renderNextUpdate();
+renderChart();
+setInterval(checkLiveMatch,60000);
 """
 
     # ── HTML-Gerüst (f-string nur für dynamische Werte) ───
@@ -1000,6 +1123,7 @@ renderAll();
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WM 2026 Tippspiel</title>
 <style>{CSS}</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="hdr">
@@ -1008,12 +1132,14 @@ renderAll();
   <div class="hdr-sub">Stand: {ts} · {filled}/72 Gruppenspiele</div></div>
 </div>
 </div>
+<div class="live-banner" id="liveBanner"><span class="live-dot"></span><span class="live-txt">LIVE:</span>&nbsp;<span class="live-match" id="liveMatch"></span></div>
 <div class="stats">
   <div class="stat-box"><div class="stat-val">{n}</div><div class="stat-lbl">Teilnehmer</div></div>
   <div class="stat-box"><div class="stat-val">{leader}</div><div class="stat-lbl">🏆 Führend</div></div>
   <div class="stat-box"><div class="stat-val">{lpts} Pkt</div><div class="stat-lbl">Höchstpunktzahl</div></div>
   <div class="stat-box"><div class="stat-val">{filled}/72</div><div class="stat-lbl">Spiele ausgewertet</div></div>
 </div>
+<div id="nextUpd" class="next-upd"></div>
 <div class="filter-bar">
   <span class="filter-lbl">Detailansicht:</span>
   <div class="drop-wrap" id="dropWrap">
@@ -1040,6 +1166,7 @@ renderAll();
     </table>
   </div>
 </div>
+<div class="chart-section"><div class="chart-wrap"><div class="chart-title">Punkteverlauf</div><div id="chartWrap" style="height:260px;position:relative"></div></div></div>
 <div class="section">
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
@@ -1059,6 +1186,8 @@ renderAll();
 </div>
 <script>
 const DATA={data_json};
+const HISTORY={history_json};
+const LIVE_SCHED={live_sched_json};
 {JS}
 function closeFb(){{document.getElementById('fbOverlay').classList.remove('open');}}
 function sendFb(){{
