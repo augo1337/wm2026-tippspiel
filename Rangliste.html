@@ -140,6 +140,40 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .arr-up{color:#66bb6a;font-size:.72rem;font-weight:700;margin-right:1px}
 .arr-dn{color:#ef5350;font-size:.72rem;font-weight:700;margin-right:1px}
 .arr-eq{color:#3a5f84;font-size:.72rem;margin-right:1px}
+.print-btn{background:none;border:1px solid #2e4e72;border-radius:5px;color:#7a9bbe;padding:2px 7px;font-size:.72rem;cursor:pointer;margin-left:6px;transition:all .15s;vertical-align:middle}
+.print-btn:hover{border-color:#4fc3f7;color:#4fc3f7}
+#pvModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px}
+#pvModal.open{display:flex}
+.pv-box{background:#fff;color:#111;border-radius:8px;padding:10mm;max-width:780px;width:100%;font-family:Arial,sans-serif;font-size:10pt;position:relative}
+.pv-close{position:absolute;top:10px;right:14px;background:#e0e0e0;border:none;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:.85rem;font-weight:700}
+.pv-close:hover{background:#ccc}
+.pv-print-action{text-align:right;margin-bottom:8px}
+.pv-print-action button{background:#1a6ec7;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-weight:700;cursor:pointer;font-size:.9rem}
+.pv-print-action button:hover{background:#1d7fd6}
+@media print{
+  #pvModal{display:none!important}
+  #pvModal.print-mode{display:block!important;position:static;background:none;padding:0}
+  #pvModal.print-mode .pv-box{box-shadow:none;border-radius:0;padding:8mm 10mm;max-width:none}
+  #pvModal.print-mode .pv-close,.pv-print-action{display:none!important}
+  .hdr,.stats,.filter-bar,.section,.chart-section,.foot,.fb-btn,.next-upd,.live-banner{display:none!important}
+}
+.pvs-hdr{font-size:15pt;font-weight:800;margin-bottom:2pt;color:#1a3a5c}
+.pvs-sub{font-size:8.5pt;color:#666;margin-bottom:12pt;border-bottom:1pt solid #ccc;padding-bottom:4pt}
+.pvs-sec{font-size:11pt;font-weight:700;background:#dde8f4;padding:3pt 6pt;margin:8pt 0 3pt;color:#1a3a5c}
+.pvs-grp{font-size:9pt;font-weight:600;background:#f0f4f8;padding:2pt 6pt;margin:4pt 0 1pt}
+.pvs-row{font-size:8.5pt;display:flex;gap:8pt;padding:1.5pt 6pt;border-bottom:.3pt solid #e0e0e0}
+.pvs-row:nth-child(odd){background:#fafafa}
+.pvs-match{flex:1}.pvs-score{font-weight:700;min-width:35pt;color:#1a6ec7}
+.pvs-date{color:#888;font-size:8pt;min-width:50pt}
+.pvs-ko-hdr{font-size:8.5pt;font-weight:700;background:#edf2f8;padding:2pt 6pt;margin:5pt 0 1pt;color:#1a3a5c;border-left:3pt solid #1a6ec7}
+.pvs-qs-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0}
+.pvs-qs-item{font-size:8pt;padding:1.5pt 6pt;border-bottom:.3pt solid #ebebeb;display:flex;gap:6pt}
+.pvs-qs-src{color:#999;font-size:7.5pt;min-width:48pt;flex-shrink:0}
+.pvs-ko-row{font-size:8.5pt;padding:2pt 6pt;display:flex;gap:8pt;border-bottom:.3pt solid #e0e0e0}
+.pvs-ko-row:nth-child(odd){background:#fafafa}
+.pvs-ko-lbl{width:105pt;color:#555;font-weight:600;flex-shrink:0}
+.pvs-leg{margin:0}.pvs-leg-row{font-size:8pt;padding:2pt 6pt;border-bottom:.3pt solid #ebebeb;line-height:1.5}
+.pvs-leg-cat{font-weight:700;color:#1a3a5c;display:inline-block;min-width:105pt;margin-right:4pt}
 @media(max-width:600px){
   .section,.chart-section{padding:12px}
   .filter-bar,.hdr{padding:10px 12px}
@@ -157,7 +191,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 <div class="hdr">
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
-  <div class="hdr-sub">Stand: 27.05.2026 11:27 Uhr · 0/72 Gruppenspiele</div></div>
+  <div class="hdr-sub">Stand: 28.05.2026 10:46 Uhr · 0/72 Gruppenspiele</div></div>
 </div>
 </div>
 <div class="live-banner" id="liveBanner"><span class="live-dot"></span><span class="live-txt">LIVE:</span>&nbsp;<span class="live-match" id="liveMatch"></span></div>
@@ -199,8 +233,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
 </div>
-<div class="foot">Generiert am 27.05.2026 11:27 Uhr · WM 2026 Tippspiel</div>
+<div class="foot">Generiert am 28.05.2026 10:46 Uhr · WM 2026 Tippspiel</div>
 <button class="fb-btn" onclick="document.getElementById('fbOverlay').classList.add('open')">💬 Feedback</button>
+<div id="pvModal" onclick="if(event.target===this)closePV()">
+  <div class="pv-box">
+    <div class="pv-print-action"><button onclick="printPV()">🖨️ Als PDF speichern</button></div>
+    <button class="pv-close" onclick="closePV()">✕ Schließen</button>
+    <div id="pvContent"></div>
+  </div>
+</div>
 <div class="fb-overlay" id="fbOverlay" onclick="if(event.target===this)closeFb()">
   <div class="fb-box">
     <h3>Feedback &amp; Verbesserungsvorschläge</h3>
@@ -289,7 +330,7 @@ function renderRanking(){
     const med=p.platz<=3?MEDALS[p.platz-1]:"";
     const cls=[p.platz<=3?`r${p.platz}`:"",selected.has(p.name)?"sel":""].filter(Boolean).join(" ");
     return `<tr class="${cls}" onclick="togglePlayerRow('${p.name.replace(/'/g,"\\'")}')">
-      <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name}</td>
+      <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name} <button class="print-btn" onclick="event.stopPropagation();openPV('${p.name.replace(/'/g,"\\'")}')">🖨️</button></td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
       <td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
@@ -423,6 +464,103 @@ function renderDetails(){
 }
 
 function setTab(tab){activeTab=tab;renderDetails();}
+
+function buildPlayerPV(p){
+  const GROUPS_PV=["A","B","C","D","E","F","G","H","I","J","K","L"];
+  let html=`<div class="pvs-hdr">WM 2026 Tippspiel – ${p.name}</div>`;
+  html+=`<div class="pvs-sub">Platz ${p.platz} · ${p.gesamt} Pkt · Tippzettel</div>`;
+
+  // Gruppenphase
+  html+='<div class="pvs-sec">Gruppenphase &nbsp;·&nbsp; Exakt +4 | Tordiff +3 | Tendenz +2 | Daneben 0</div>';
+  const byGr={};
+  for(const s of p.spiele){(byGr[s.gr]=byGr[s.gr]||[]).push(s);}
+  for(const g of GROUPS_PV){
+    if(!byGr[g])continue;
+    html+=`<div class="pvs-grp">Gruppe ${g}</div>`;
+    for(const s of byGr[g]){
+      html+=`<div class="pvs-row"><span class="pvs-date">${s.datum} ${s.uhrzeit||''}</span><span class="pvs-match">${s.heim} vs ${s.gast}</span><span class="pvs-score">${s.tipp||'–'}</span></div>`;
+    }
+  }
+
+  // GQ
+  html+='<div class="pvs-sec">Gruppenqualifikanten &nbsp;·&nbsp; 32 Teams · je +3 Pkt</div>';
+  html+='<div class="pvs-qs-grid">';
+  const gqActual=DATA.ko['GQ']||[];
+  (p.gq_teams||[]).forEach(t=>{
+    const hit=gqActual.includes(t.toLowerCase());
+    html+=`<div class="pvs-qs-item" style="${hit?'color:#1b5e20;font-weight:700':'color:#888'}">${t}</div>`;
+  });
+  html+='</div>';
+
+  // KO-Runden
+  html+='<div class="pvs-sec">KO-Runden</div>';
+
+  const koTipps=p.ko_tipps;
+  const koDef=[
+    {id:'S16',lbl:'Achtelfinale-Teilnehmer · 16 Teams · je +5 Pkt',actual:(DATA.ko['S16']||[])},
+    {id:'S8', lbl:'Viertelfinale-Teilnehmer · 8 Teams · je +10 Pkt',actual:(DATA.ko['S8']||[])},
+    {id:'VF', lbl:'Halbfinale-Teilnehmer · 4 Teams · je +15 Pkt',actual:(DATA.ko['VF']||[])},
+    {id:'HF', lbl:'Finalisten · 2 Teams · je +20 Pkt',actual:(DATA.ko['HF']||[])},
+  ];
+  for(const {id,lbl,actual} of koDef){
+    const teams=Array.isArray(koTipps[id])?koTipps[id]:[];
+    const cnt=teams.filter(t=>t&&t!=='').length;
+    html+=`<div class="pvs-ko-hdr">${lbl} · ${cnt}/${id==='HF'?2:id==='VF'?4:id==='S8'?8:16} getippt</div>`;
+    html+='<div class="pvs-qs-grid">';
+    teams.forEach((t,i)=>{
+      const hit=t&&actual.includes(t.toLowerCase());
+      html+=`<div class="pvs-qs-item" style="${hit?'color:#1b5e20;font-weight:700':''}">${t||'–'}</div>`;
+    });
+    html+='</div>';
+  }
+
+  // Platz 3
+  const p3actual=DATA.ko['P3']||[];
+  const p3tip=koTipps['P3']||'–';
+  const p3t1=p3actual[0]||'–', p3t2=p3actual[1]||'–';
+  html+='<div class="pvs-ko-hdr">Spiel um Platz 3 · Teilnahme +10 Pkt · Sieger +15 Pkt</div>';
+  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 1</span><span>${p3t1}</span></div>`;
+  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 2</span><span>${p3t2}</span></div>`;
+  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Mein Tipp – Sieger</span><span>${p3tip}</span></div>`;
+
+  // Weltmeister
+  const wmtip=koTipps['WM']||'–';
+  html+='<div class="pvs-ko-hdr">Weltmeister · +25 Pkt</div>';
+  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Weltmeister</span><span>${wmtip}</span></div>`;
+
+  // Legende
+  html+='<div class="pvs-sec">Punktesystem</div>';
+  html+=`<div class="pvs-leg">
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Gruppenphase:</span>Exakt +4 · Tordifferenz +3 · Tendenz richtig +2 · Daneben 0 Pkt</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Gr.-Qualifikanten:</span>32 Teams, je +3 Pkt pro richtig getipptem Qualifikanten</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Achtelfinale-Teilnehmer:</span>16 Teams, je +5 Pkt pro richtig getipptem Team</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Viertelfinale-Teilnehmer:</span>8 Teams, je +10 Pkt pro richtig getipptem Team</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Halbfinale-Teilnehmer:</span>4 Teams, je +15 Pkt pro richtig getipptem Team</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Platz 3:</span>Tipp auf Teilnehmer +10 Pkt · Sieger richtig +15 Pkt (max. 25 Pkt)</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Finalisten:</span>Beide richtig +40 · Ein Finalist richtig +20 · Kein Treffer 0 Pkt</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Weltmeister:</span>+25 Pkt</div>
+  </div>`;
+
+  return html;
+}
+
+function openPV(name){
+  const p=DATA.players.find(x=>x.name===name);
+  if(!p)return;
+  const modal=document.getElementById('pvModal');
+  document.getElementById('pvContent').innerHTML=buildPlayerPV(p);
+  modal.classList.add('open');
+}
+function closePV(){
+  const modal=document.getElementById('pvModal');
+  modal.classList.remove('open','print-mode');
+}
+function printPV(){
+  const modal=document.getElementById('pvModal');
+  modal.classList.add('print-mode');
+  window.print();
+  setTimeout(()=>modal.classList.remove('print-mode'),500);
+}
 
 function checkLiveMatch(){
   const now=Date.now();
