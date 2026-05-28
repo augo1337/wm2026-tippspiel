@@ -919,9 +919,14 @@ function buildPrintView() {
     html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Finalist ${i+1}</span><span class="pv-ko-val">${t || '–'}</span></div>`;
   });
 
-  // Platz 3
-  html += '<div class="pv-ko-hdr">Spiel um Platz 3 · Teilnahme +10, Sieger +15 Pkt</div>';
-  html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Platz 3 Sieger</span><span class="pv-ko-val">${p3Pick || '–'}</span></div>`;
+  // Platz 3 – beide Teilnehmer + Sieger-Tipp
+  const p3Teams = getP3Teams();
+  const p3t1 = p3Teams[0].team !== '?' ? p3Teams[0].team : '–';
+  const p3t2 = p3Teams[1].team !== '?' ? p3Teams[1].team : '–';
+  html += '<div class="pv-ko-hdr">Spiel um Platz 3 · Teilnahme +10 Pkt · Sieger +15 Pkt (max. 25 Pkt)</div>';
+  html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Teilnehmer 1</span><span class="pv-ko-val">${p3t1}</span></div>`;
+  html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Teilnehmer 2</span><span class="pv-ko-val">${p3t2}</span></div>`;
+  html += `<div class="pv-ko-row"><span class="pv-ko-lbl">Mein Tipp – Sieger</span><span class="pv-ko-val">${p3Pick || '–'}</span></div>`;
 
   // Weltmeister
   html += '<div class="pv-ko-hdr">Weltmeister · +25 Pkt</div>';
@@ -935,7 +940,7 @@ function buildPrintView() {
     <div class="pv-leg-row"><span class="pv-leg-cat">Achtelfinale-Teilnehmer:</span>16 Teams, je +5 Pkt pro richtig getipptem Team</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Viertelfinale-Teilnehmer:</span>8 Teams, je +10 Pkt pro richtig getipptem Team</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Halbfinale-Teilnehmer:</span>4 Teams, je +15 Pkt pro richtig getipptem Team</div>
-    <div class="pv-leg-row"><span class="pv-leg-cat">Platz 3:</span>Team im Spiel +10 Pkt · Sieger richtig +15 Pkt (max. 25 Pkt)</div>
+    <div class="pv-leg-row"><span class="pv-leg-cat">Platz 3:</span>Beide Teilnehmer sind auto-berechnet (Halbfinal-Verlierer) · Tipp auf Teilnehmer +10 Pkt · Sieger richtig +15 Pkt (max. 25 Pkt)</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Finalisten:</span>Beide richtig +40 · Ein Finalist richtig +20 · Kein Treffer 0 Pkt</div>
     <div class="pv-leg-row"><span class="pv-leg-cat">Weltmeister:</span>+25 Pkt</div>
   </div>`;
