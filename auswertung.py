@@ -372,7 +372,7 @@ def auswerten(df, gs_results, ko_results):
             "Weltmeister": pts_ko.get("WM", 0),
             "_detail": detail_gruppe,
             "_resp": resp,
-            "_gq_pred": sorted([norm(t) for t in pred_qualifiers]),
+            "_gq_pred": sorted([t for t in pred_qualifiers]),
         })
 
     rows.sort(key=lambda x: x["Gesamt"], reverse=True)
@@ -652,13 +652,23 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
         k: [str(t).strip().lower() for t in v if t and str(t).strip()]
         for k, v in ko_results.items()
     }
+    # Original-Schreibweise separat für Anzeige (nicht lowercase)
+    ko_res_display = {
+        k: [str(t).strip() for t in v if t and str(t).strip()]
+        for k, v in ko_results.items()
+    }
+    # P3-Teilnehmer = HF-Verlierer (alle HF-Teams minus Finalisten)
+    hf_teams = [str(t).strip() for t in ko_results.get("HF", []) if t and str(t).strip()]
+    f_teams  = [str(t).strip() for t in ko_results.get("F",  []) if t and str(t).strip()]
+    p3_participants = [t for t in hf_teams if t not in f_teams][:2]
+    ko_res_display["P3_participants"] = p3_participants
 
     filled  = sum(1 for v in gs_results.values() if v)
     ts      = datetime.now().strftime("%d.%m.%Y %H:%M Uhr")
     leader  = rows[0]["Name"] if rows else "–"
     lpts    = rows[0]["Gesamt"] if rows else 0
     n       = len(rows)
-    data_json = _json.dumps({"players": players_js, "ko": ko_res_js}, ensure_ascii=False)
+    data_json = _json.dumps({"players": players_js, "ko": ko_res_js, "ko_display": ko_res_display}, ensure_ascii=False)
 
     # ── History laden + aktualisieren ────────────────────────
     import re as _re, calendar as _cal
@@ -1142,10 +1152,11 @@ function buildPlayerPV(p){
     html+='</div>';
   }
 
-  // Platz 3
-  const p3actual=DATA.ko['P3']||[];
+  // Platz 3 – Teilnehmer aus ko_display (HF-Verlierer), Sieger aus ko_display.P3
+  const p3participants=(DATA.ko_display&&DATA.ko_display['P3_participants'])||[];
+  const p3winner=(DATA.ko_display&&DATA.ko_display['P3']&&DATA.ko_display['P3'][0])||'–';
   const p3tip=koTipps['P3']||'–';
-  const p3t1=p3actual[0]||'–', p3t2=p3actual[1]||'–';
+  const p3t1=p3participants[0]||'–', p3t2=p3participants[1]||'–';
   html+='<div class="pvs-ko-hdr">Spiel um Platz 3 · Teilnahme +10 Pkt · Sieger +15 Pkt</div>';
   html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 1</span><span>${p3t1}</span></div>`;
   html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 2</span><span>${p3t2}</span></div>`;
