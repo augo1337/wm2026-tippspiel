@@ -898,7 +898,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Achtelfinale-Teilnehmer (16 Teams, je +5 Pkt)","28.06.–04.07."],
+const KO_ROUNDS=[["GQ","Qualifikation fürs 16tel-Finale (32 Teams, je +3 Pkt)","28.06."],["S16","Achtelfinale-Teilnehmer (16 Teams, je +5 Pkt)","28.06.–04.07."],
   ["S8","Viertelfinale-Teilnehmer (8 Teams, je +10 Pkt)","04.–07.07."],
   ["VF","Halbfinale-Teilnehmer (4 Teams, je +15 Pkt)","09.–12.07."],
   ["P3","Platz 3 (Teilnehmer +10, Sieger +15)","18.07."],
@@ -1004,7 +1004,7 @@ function renderDetails(){
     `<span class="gtab${activeTab==='Gruppen'?' active':''}" onclick="setTab('Gruppen')">Gruppen</span>`,
     `<span style="color:#2e4e72;padding:0 4px">│</span>`,
     ...KO_ROUNDS.map(([k,lbl])=>{
-      const short={GQ:'GQ',S16:'AF (16)',S8:'VF (8)',VF:'HF (4)',P3:'Platz 3',F:'Finale',WM:'WM'}[k]||k;
+      const short={GQ:'GQ (32)',S16:'AF (16)',S8:'VF (8)',VF:'HF (4)',P3:'Platz 3',F:'Finale',WM:'WM'}[k]||k;
       return `<span class="gtab${k===activeTab?' active':''}" onclick="setTab('${k}')">${short}</span>`;
     })
   ].join('');
@@ -1040,32 +1040,29 @@ function renderDetails(){
     tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppenphase gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else if(activeTab==='GQ'){
     const gqActual=DATA.ko['GQ']||[];
-    // Vor Gruppenphase: getippte Teams anzeigen; danach: echte Qualifikanten
     const allPredTeams=new Set();
     players.forEach(p=>(p.gq_teams||[]).forEach(t=>{if(t)allPredTeams.add(t)}));
     const teamList=gqActual.length>0 ? gqActual : [...allPredTeams].sort((a,b)=>a.localeCompare(b,'de'));
+    const hasActual=gqActual.length>0;
     const rows=teamList.length===0
-      ?`<tr><td colspan="${players.length+1}" style="text-align:center;padding:24px;color:#546e7a">Keine Tipps vorhanden</td></tr>`
-      :teamList.map(team=>{
+      ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Keine Tipps vorhanden</td></tr>`
+      :teamList.map((team,i)=>{
         const plCells=players.map(p=>{
           const pred=(p.gq_teams||[]);
           const tipped=pred.includes(team);
-          if(gqActual.length>0){
-            return `<td class="mcel ${tipped?'mcel-ex':'mcel-ms'}">${tipped?'✓':'✗'}</td>`;
-          } else {
-            return `<td class="mcel ${tipped?'mcel-ex':'mcel-op'}">${tipped?'✓':'–'}</td>`;
-          }
+          const cls=hasActual?(tipped?'mcel-ex':'mcel-ms'):(tipped?'mcel-ex':'mcel-op');
+          return `<td class="mcel ${cls}">${tipped?team:'–'}</td>`;
         }).join('');
-        return `<tr><td class="mi-t">${team}</td>${plCells}</tr>`;
+        return `<tr><td class="mi" style="white-space:nowrap;padding:5px 8px;min-width:30px;font-size:.78rem;color:#7a9bbe">${i+1}.</td><td class="mi-t">${hasActual?team:'–'}</td>${plCells}</tr>`;
       }).join('');
     const subs=players.map(p=>{
       const hits=(p.gq_teams||[]).filter(t=>gqActual.includes(t)).length;
       const tipCount=(p.gq_teams||[]).length;
-      return gqActual.length>0
+      return hasActual
         ?`<td><b>${hits*3}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/32)</span></td>`
-        :`<td><span style="opacity:.5;font-size:.73rem">${tipCount} getippt</span></td>`;
+        :`<td><span style="opacity:.5;font-size:.73rem">${tipCount}/32 getippt</span></td>`;
     }).join('');
-    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Qualifikant fürs Achtelfinale (je +3 Pkt) · 32 Teams</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="sub-lbl">GQ gesamt:</td>${subs}</tr></tfoot></table></div>`;
+    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:30px;text-align:left;padding-left:8px"></th><th class="mh-l">Qualifikant fürs 16tel-Finale (je +3 Pkt)</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td></td><td class="sub-lbl">GQ gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
