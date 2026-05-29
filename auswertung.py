@@ -898,9 +898,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
     JS = """
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
-const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Achtelfinale (16 Teams)","28.06.–04.07."],["S8","Viertelfinale (8 Teams)","04.–07.07."],
-  ["VF","Halbfinale (4 Teams)","09.–12.07."],["HF","Finalisten (2 Teams)","15.–16.07."],
-  ["P3","Platz 3 Sieger","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
+const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Achtelfinale-Teilnehmer (16 Teams, je +5 Pkt)","28.06.–04.07."],
+  ["S8","Viertelfinale-Teilnehmer (8 Teams, je +10 Pkt)","04.–07.07."],
+  ["VF","Halbfinale-Teilnehmer (4 Teams, je +15 Pkt)","09.–12.07."],
+  ["P3","Platz 3 (Teilnehmer +10, Sieger +15)","18.07."],
+  ["F","Finalisten (2 Teams, je +20 Pkt)","19.07."],["WM","Weltmeister (+25 Pkt)",""]];
 let selected=new Set(DATA.players.map(p=>p.name));
 
 function badge(pts){
@@ -1002,7 +1004,7 @@ function renderDetails(){
     `<span class="gtab${activeTab==='Gruppen'?' active':''}" onclick="setTab('Gruppen')">Gruppen</span>`,
     `<span style="color:#2e4e72;padding:0 4px">│</span>`,
     ...KO_ROUNDS.map(([k,lbl])=>{
-      const short={GQ:'GQ',S16:'S16',S8:'S8',VF:'VF',HF:'HF',P3:'P3',F:'Finale',WM:'WM'}[k]||k;
+      const short={GQ:'GQ',S16:'AF (16)',S8:'VF (8)',VF:'HF (4)',P3:'Platz 3',F:'Finale',WM:'WM'}[k]||k;
       return `<span class="gtab${k===activeTab?' active':''}" onclick="setTab('${k}')">${short}</span>`;
     })
   ].join('');
@@ -1091,7 +1093,8 @@ function renderDetails(){
       const maxLen=Math.max(...tips.map(t=>t.length),0);
       const isFinale=activeTab==='F';
       const rowLabels=isFinale?['Finalist 1','Finalist 2']:null;
-      const colHdr=isFinale?'Finalist':'Weitergekommen';
+      const colHdrMap={S16:'Achtelfinale-Teilnehmer (je +5 Pkt)',S8:'Viertelfinale-Teilnehmer (je +10 Pkt)',VF:'Halbfinale-Teilnehmer (je +15 Pkt)',F:'Finalist (je +20 Pkt)'};
+      const colHdr=colHdrMap[activeTab]||'Weitergekommen';
       const rows=maxLen===0
         ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Runde noch nicht begonnen</td></tr>`
         :Array.from({length:maxLen},(_,i)=>{
