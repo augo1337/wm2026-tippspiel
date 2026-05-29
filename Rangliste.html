@@ -191,7 +191,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 <div class="hdr">
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
-  <div class="hdr-sub">Stand: 29.05.2026 12:24 Uhr · 0/72 Gruppenspiele</div></div>
+  <div class="hdr-sub">Stand: 29.05.2026 12:59 Uhr · 0/72 Gruppenspiele</div></div>
 </div>
 </div>
 <div class="live-banner" id="liveBanner"><span class="live-dot"></span><span class="live-txt">LIVE:</span>&nbsp;<span class="live-match" id="liveMatch"></span></div>
@@ -233,7 +233,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
 </div>
-<div class="foot">Generiert am 29.05.2026 12:24 Uhr · WM 2026 Tippspiel</div>
+<div class="foot">Generiert am 29.05.2026 12:59 Uhr · WM 2026 Tippspiel</div>
 <button class="fb-btn" onclick="document.getElementById('fbOverlay').classList.add('open')">💬 Feedback</button>
 <div id="pvModal" onclick="if(event.target===this)closePV()">
   <div class="pv-box">
@@ -261,8 +261,8 @@ const LIVE_SCHED=[[1781204400000, "Mexiko vs Südafrika", 120], [1781229600000, 
 const MEDALS=["🥇","🥈","🥉"];
 const GROUPS=["A","B","C","D","E","F","G","H","I","J","K","L"];
 const KO_ROUNDS=[["GQ","Gr.-Qualifikation","28.06."],["S16","Achtelfinale (16 Teams)","28.06.–04.07."],["S8","Viertelfinale (8 Teams)","04.–07.07."],
-  ["VF","Halbfinale (4 Teams)","09.–12.07."],
-  ["P3","Platz 3","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
+  ["VF","Halbfinale (4 Teams)","09.–12.07."],["HF","Finalisten (2 Teams)","15.–16.07."],
+  ["P3","Platz 3 Sieger","18.07."],["F","Finale","19.07."],["WM","Weltmeister",""]];
 let selected=new Set(DATA.players.map(p=>p.name));
 
 function badge(pts){
@@ -427,18 +427,27 @@ function renderDetails(){
       }).join('');
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
     } else if(activeTab==='P3'){
-      const winnerNorm=norm.length>0?norm[0]:'';
-      const allParticipants=new Set(norm);
-      const plCells=players.map(p=>{
+      const p3parts=(DATA.ko_display&&DATA.ko_display['P3_participants'])||[];
+      const p3t1=p3parts[0]||'–';
+      const p3t2=p3parts[1]||'–';
+      const winnerActual=(DATA.ko_display&&DATA.ko_display['P3']&&DATA.ko_display['P3'][0])||'–';
+      const winnerNorm=winnerActual!=='–'?winnerActual.toLowerCase():'';
+      const p3t1Norm=p3t1!=='–'?p3t1.toLowerCase():'';
+      const p3t2Norm=p3t2!=='–'?p3t2.toLowerCase():'';
+      const emptyPartCells=`<td colspan="${players.length}" style="text-align:center;color:#546e7a;font-size:.78rem">–</td>`;
+      const rowP3part1=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 1</td><td class="mi-t">${p3t1}</td>${emptyPartCells}</tr>`;
+      const rowP3part2=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 2</td><td class="mi-t">${p3t2}</td>${emptyPartCells}</tr>`;
+      const siegerCells=players.map(p=>{
         const tip=p.ko_tipps['P3']||'–';
         const tipLow=tip.toLowerCase();
         const isWinner=winnerNorm&&tipLow===winnerNorm;
-        const isParticipant=allParticipants.size>0&&allParticipants.has(tipLow);
-        const cls=isWinner?'mcel-ex':isParticipant?'mcel-td':allParticipants.size>0?'mcel-ms':'mcel-op';
+        const isParticipant=(p3t1Norm||p3t2Norm)&&(tipLow===p3t1Norm||tipLow===p3t2Norm);
+        const known=winnerNorm||(p3t1Norm||p3t2Norm);
+        const cls=isWinner?'mcel-ex':isParticipant?'mcel-td':known?'mcel-ms':'mcel-op';
         return `<td class="mcel ${cls}">${tip}</td>`;
       }).join('');
-      const bothTeams=norm.length>=2?`${actual[0]} / ${actual[1]}`:actual[0]||'–';
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Platz 3 – Teilnehmer</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${bothTeams}</td>${plCells}</tr></tbody></table></div>`;
+      const rowSieger=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Sieger-Tipp</td><td class="mi-t">${winnerActual}</td>${siegerCells}</tr>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">Platz 3 (Teilnehmer +10, Sieger +15)</th>${plHdrs}</tr></thead><tbody>${rowP3part1}${rowP3part2}${rowSieger}</tbody></table></div>`;
     } else {
       const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
       const maxLen=Math.max(...tips.map(t=>t.length),0);
