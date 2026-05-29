@@ -1040,21 +1040,32 @@ function renderDetails(){
     tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppenphase gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else if(activeTab==='GQ'){
     const gqActual=DATA.ko['GQ']||[];
-    const rows=gqActual.length===0
-      ?`<tr><td colspan="${players.length+1}" style="text-align:center;padding:24px;color:#546e7a">Gruppenphase noch nicht abgeschlossen</td></tr>`
-      :gqActual.map(team=>{
+    // Vor Gruppenphase: getippte Teams anzeigen; danach: echte Qualifikanten
+    const allPredTeams=new Set();
+    players.forEach(p=>(p.gq_teams||[]).forEach(t=>{if(t)allPredTeams.add(t)}));
+    const teamList=gqActual.length>0 ? gqActual : [...allPredTeams].sort((a,b)=>a.localeCompare(b,'de'));
+    const rows=teamList.length===0
+      ?`<tr><td colspan="${players.length+1}" style="text-align:center;padding:24px;color:#546e7a">Keine Tipps vorhanden</td></tr>`
+      :teamList.map(team=>{
         const plCells=players.map(p=>{
           const pred=(p.gq_teams||[]);
-          const hit=pred.includes(team);
-          return `<td class="mcel ${hit?'mcel-ex':'mcel-ms'}">${hit?'✓':'✗'}</td>`;
+          const tipped=pred.includes(team);
+          if(gqActual.length>0){
+            return `<td class="mcel ${tipped?'mcel-ex':'mcel-ms'}">${tipped?'✓':'✗'}</td>`;
+          } else {
+            return `<td class="mcel ${tipped?'mcel-ex':'mcel-op'}">${tipped?'✓':'–'}</td>`;
+          }
         }).join('');
         return `<tr><td class="mi-t">${team}</td>${plCells}</tr>`;
       }).join('');
     const subs=players.map(p=>{
       const hits=(p.gq_teams||[]).filter(t=>gqActual.includes(t)).length;
-      return `<td><b>${hits*3}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/32)</span></td>`;
+      const tipCount=(p.gq_teams||[]).length;
+      return gqActual.length>0
+        ?`<td><b>${hits*3}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/32)</span></td>`
+        :`<td><span style="opacity:.5;font-size:.73rem">${tipCount} getippt</span></td>`;
     }).join('');
-    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Qualifikant (je +3 Pkt)</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="sub-lbl">GQ gesamt:</td>${subs}</tr></tfoot></table></div>`;
+    tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Qualifikant fürs Achtelfinale (je +3 Pkt) · 32 Teams</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td class="sub-lbl">GQ gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else {
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
@@ -1074,9 +1085,30 @@ function renderDetails(){
       const winnerNorm=winnerActual!=='–'?winnerActual.toLowerCase():'';
       const p3t1Norm=p3t1!=='–'?p3t1.toLowerCase():'';
       const p3t2Norm=p3t2!=='–'?p3t2.toLowerCase():'';
-      const emptyPartCells=`<td colspan="${players.length}" style="text-align:center;color:#546e7a;font-size:.78rem">–</td>`;
-      const rowP3part1=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 1</td><td class="mi-t">${p3t1}</td>${emptyPartCells}</tr>`;
-      const rowP3part2=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 2</td><td class="mi-t">${p3t2}</td>${emptyPartCells}</tr>`;
+      // Getippte P3-Teilnehmer pro Spieler = VF-Tipps minus HF-Tipps
+      function getPlayerP3Parts(p){
+        const vf=(p.ko_tipps['VF']||[]).map(t=>(t||'').toLowerCase()).filter(Boolean);
+        const hf=(p.ko_tipps['HF']||[]).map(t=>(t||'').toLowerCase()).filter(Boolean);
+        return vf.filter(t=>!hf.includes(t));
+      }
+      const partCells1=players.map(p=>{
+        const parts=getPlayerP3Parts(p);
+        const tip=parts[0]||'–';
+        const hit=p3t1Norm&&tip===p3t1Norm;
+        const miss=p3t1Norm&&!hit&&tip!=='–';
+        const cls=hit?'mcel-ex':miss?'mcel-ms':'mcel-op';
+        return `<td class="mcel ${cls}">${tip}</td>`;
+      }).join('');
+      const partCells2=players.map(p=>{
+        const parts=getPlayerP3Parts(p);
+        const tip=parts[1]||'–';
+        const hit=p3t2Norm&&tip===p3t2Norm;
+        const miss=p3t2Norm&&!hit&&tip!=='–';
+        const cls=hit?'mcel-ex':miss?'mcel-ms':'mcel-op';
+        return `<td class="mcel ${cls}">${tip}</td>`;
+      }).join('');
+      const rowP3part1=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 1</td><td class="mi-t">${p3t1}</td>${partCells1}</tr>`;
+      const rowP3part2=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Teilnehmer 2</td><td class="mi-t">${p3t2}</td>${partCells2}</tr>`;
       const siegerCells=players.map(p=>{
         const tip=p.ko_tipps['P3']||'–';
         const tipLow=tip.toLowerCase();
