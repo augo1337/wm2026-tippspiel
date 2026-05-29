@@ -1084,14 +1084,14 @@ function renderDetails(){
       const p3t2Norm=p3t2!=='–'?p3t2.toLowerCase():'';
       // Getippte P3-Teilnehmer pro Spieler = VF-Tipps minus HF-Tipps
       function getPlayerP3Parts(p){
-        const vf=(p.ko_tipps['VF']||[]).map(t=>(t||'').toLowerCase()).filter(Boolean);
-        const hf=(p.ko_tipps['HF']||[]).map(t=>(t||'').toLowerCase()).filter(Boolean);
-        return vf.filter(t=>!hf.includes(t));
+        const vf=(p.ko_tipps['VF']||[]).filter(Boolean);
+        const hfNorm=(p.ko_tipps['HF']||[]).map(t=>(t||'').toLowerCase()).filter(Boolean);
+        return vf.filter(t=>!hfNorm.includes((t||'').toLowerCase()));
       }
       const partCells1=players.map(p=>{
         const parts=getPlayerP3Parts(p);
         const tip=parts[0]||'–';
-        const hit=p3t1Norm&&tip===p3t1Norm;
+        const hit=p3t1Norm&&tip.toLowerCase()===p3t1Norm;
         const miss=p3t1Norm&&!hit&&tip!=='–';
         const cls=hit?'mcel-ex':miss?'mcel-ms':'mcel-op';
         return `<td class="mcel ${cls}">${tip}</td>`;
@@ -1099,7 +1099,7 @@ function renderDetails(){
       const partCells2=players.map(p=>{
         const parts=getPlayerP3Parts(p);
         const tip=parts[1]||'–';
-        const hit=p3t2Norm&&tip===p3t2Norm;
+        const hit=p3t2Norm&&tip.toLowerCase()===p3t2Norm;
         const miss=p3t2Norm&&!hit&&tip!=='–';
         const cls=hit?'mcel-ex':miss?'mcel-ms':'mcel-op';
         return `<td class="mcel ${cls}">${tip}</td>`;
