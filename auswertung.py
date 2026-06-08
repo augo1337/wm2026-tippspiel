@@ -135,7 +135,7 @@ KO_COLS = {
     "WM":  ["[WM] Weltmeister"],
 }
 
-KO_PUNKTE = {"S16": 5, "S8": 10, "VF": 15}
+KO_PUNKTE = {"S16": 5, "S8": 10, "VF": 15, "HF": 20}
 
 # ============================================================
 # PUNKTE BERECHNUNG
@@ -347,10 +347,6 @@ def auswerten(df, gs_results, ko_results):
             actual = ko_results.get(runde, [])
             pts_ko[runde] = calc_ko_pts(pred, actual, pts_each)
 
-        pred_finale = [resp.get(c) for c in KO_COLS["F"]]
-        actual_finale = ko_results.get("F", [])
-        pts_ko["F"] = calc_ko_pts(pred_finale, actual_finale, 20)
-
         pts_ko["P3"] = calc_p3_pts(resp.get(KO_COLS["P3"][0]), ko_results.get("P3", []))
 
         pred_qualifiers = calc_qualifiers_from_predictions(detail_gruppe)
@@ -367,8 +363,9 @@ def auswerten(df, gs_results, ko_results):
             "S16": pts_ko.get("S16", 0),
             "S8":  pts_ko.get("S8",  0),
             "VF":  pts_ko.get("VF",  0),
+            "HF":  pts_ko.get("HF",  0),
             "P3":  pts_ko.get("P3",  0),
-            "Finale": pts_ko.get("F", 0),
+            "Finale": pts_ko.get("HF", 0),
             "Weltmeister": pts_ko.get("WM", 0),
             "_detail": detail_gruppe,
             "_resp": resp,
@@ -412,8 +409,8 @@ def write_rangliste(wb, rows):
 
     headers = ["Platz", "Name", "Gesamt", "Gruppenphase",
                "Gr.-Qualifikation", "Achtelfinale", "Viertelfinale", "Halbfinale",
-               "Platz 3", "Finale", "Weltmeister"]
-    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 10, 10, 14]
+               "Finalisten (+20)", "Platz 3", "Weltmeister"]
+    col_widths = [8, 22, 10, 14, 18, 14, 14, 12, 14, 10, 14]
 
     # Header
     for c, (h, w) in enumerate(zip(headers, col_widths), 1):
@@ -429,7 +426,7 @@ def write_rangliste(wb, rows):
     for r in rows:
         row_num = r["Platz"] + 1
         values = [r["Platz"], r["Name"], r["Gesamt"], r["Gruppenphase"],
-                  r.get("GQ", 0), r["S16"], r["S8"], r["VF"], r.get("P3", 0), r["Finale"], r["Weltmeister"]]
+                  r.get("GQ", 0), r["S16"], r["S8"], r["VF"], r.get("HF", 0), r.get("P3", 0), r["Weltmeister"]]
 
         platz_fill = CLR_LIGHT
         if r["Platz"] == 1: platz_fill = CLR_GOLD
@@ -515,7 +512,7 @@ def write_ko_details(wb, rows, ko_results):
         ("S16", "Achtelfinale-Teilnehmer (16)",   16, 5),
         ("S8",  "Viertelfinale-Teilnehmer (8)",    8, 10),
         ("VF",  "Halbfinale-Teilnehmer (4)",        4, 15),
-        ("F",   "Finale",                           2, 20),
+        ("HF",  "Finalisten (2)",                   2, 20),
         ("WM",  "Weltmeister",                      1, 25),
     ]
 
@@ -641,7 +638,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             "gesamt": r["Gesamt"], "gruppe": r["Gruppenphase"],
             "gq": r.get("GQ", 0),
             "s16": r["S16"], "s8": r["S8"],
-            "vf": r["VF"],
+            "vf": r["VF"], "hf": r.get("HF", 0),
             "p3": r.get("P3", 0),
             "finale": r["Finale"], "wm": r["Weltmeister"],
             "spiele": spiele, "ko_tipps": ko_tipps,
@@ -973,7 +970,7 @@ function renderRanking(){
       <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name} <button class="print-btn" onclick="event.stopPropagation();openPV('${p.name.replace(/'/g,"\\\\'")}')">🖨️</button></td>
       <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
-      <td>${p.p3}</td><td>${p.finale}</td><td>${p.wm}</td>
+      <td>${p.hf}</td><td>${p.p3}</td><td>${p.wm}</td>
     </tr>`;
   }).join("");
 }
@@ -1343,7 +1340,7 @@ setInterval(checkLiveMatch,60000);
     <table class="rtbl">
       <thead><tr>
         <th>Platz</th><th>Name</th><th>Gesamt</th><th>Gruppe</th>
-        <th>GQ</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>Finale</th><th>WM</th>
+        <th>GQ</th><th>AF</th><th>VF</th><th>HF</th><th>P3</th><th>WM</th>
       </tr></thead>
       <tbody id="rankBody"></tbody>
     </table>
