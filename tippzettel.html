@@ -1246,7 +1246,7 @@ function renderExport() {
     return `<li class="${cls}">${it.label}</li>`;
   }).join('');
   document.getElementById('chk-list').innerHTML = listHtml;
-  document.getElementById('exp-btn').disabled = !name || name.length < 2;
+  document.getElementById('exp-btn').disabled = !items.every(it => it.ok);
 }
 
 // ═══════════════════════════════════════════════════════════════════
