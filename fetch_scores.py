@@ -272,39 +272,37 @@ def main():
     print("  WM 2026 – Automatisches Score-Update")
     print("=" * 50)
 
-    # Kein Spiel aktiv oder kürzlich beendet → Abbruch ohne API-Aufruf
-    if not is_match_window():
-        print("\nKein WM-Spiel im aktiven Zeitfenster – überspringe.")
-        sys.exit(0)
-
     # Tipps-Ordner prüfen
     if not TIPPS_ORDNER.exists() or not list(TIPPS_ORDNER.glob("*.json")):
         print(f"\nHINWEIS: Keine JSON-Tipps in '{TIPPS_ORDNER}' gefunden.")
         print("Workflow wartet auf Tipp-Dateien – kein Fehler.")
         sys.exit(0)
 
-    # Ergebnisse abrufen
-    print("\nHole Ergebnisse von football-data.org ...")
-    api_matches = fetch_matches()
+    # Nur API-Abruf überspringen wenn kein Spiel aktiv – Rangliste immer neu generieren
+    if not is_match_window():
+        print("\nKein WM-Spiel im aktiven Zeitfenster – überspringe API-Abruf.")
+    else:
+        # Ergebnisse abrufen
+        print("\nHole Ergebnisse von football-data.org ...")
+        api_matches = fetch_matches()
 
-    if not api_matches:
-        print("Keine Spieldaten verfügbar – Abbruch.")
-        sys.exit(0)
+        if not api_matches:
+            print("Keine Spieldaten verfügbar – überspringe API-Update.")
+        else:
+            print(f"  {len(api_matches)} Spiele in der API gefunden")
+            gs_results, ko_results = parse_matches(api_matches)
 
-    print(f"  {len(api_matches)} Spiele in der API gefunden")
-    gs_results, ko_results = parse_matches(api_matches)
+            finished_gs = sum(1 for v in gs_results.values() if v)
+            print(f"  Gruppenphase abgeschlossen: {finished_gs}/72")
+            ko_info = {k: len(v) for k, v in ko_results.items() if v}
+            if ko_info:
+                print(f"  KO-Teams bekannt: {ko_info}")
 
-    finished_gs = sum(1 for v in gs_results.values() if v)
-    print(f"  Gruppenphase abgeschlossen: {finished_gs}/72")
-    ko_info = {k: len(v) for k, v in ko_results.items() if v}
-    if ko_info:
-        print(f"  KO-Teams bekannt: {ko_info}")
+            # Ergebnisse.xlsx aktualisieren
+            write_ergebnisse(gs_results, ko_results)
+            print(f"\n✓ Ergebnisse.xlsx aktualisiert")
 
-    # Ergebnisse.xlsx aktualisieren
-    write_ergebnisse(gs_results, ko_results)
-    print(f"\n✓ Ergebnisse.xlsx aktualisiert")
-
-    # Rangliste erstellen
+    # Rangliste immer neu erstellen (auch vor WM-Start, damit neue Tipps sichtbar werden)
     print("\nErstelle Rangliste ...")
     result = subprocess.run(
         [sys.executable, "-X", "utf8",
