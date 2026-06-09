@@ -877,6 +877,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 .pvs-ko-row{font-size:8.5pt;padding:2pt 6pt;display:flex;gap:8pt;border-bottom:.3pt solid #e0e0e0}
 .pvs-ko-row:nth-child(odd){background:#fafafa}
 .pvs-ko-lbl{width:105pt;color:#555;font-weight:600;flex-shrink:0}
+.pvs-match-pair{font-size:8.5pt;padding:2pt 6pt;display:flex;gap:4pt;align-items:baseline;border-bottom:.3pt solid #e0e0e0}
+.pvs-match-pair:nth-child(odd){background:#fafafa}
+.pvs-mp-lbl{color:#999;font-size:7.5pt;min-width:32pt;flex-shrink:0}
+.pvs-mp-teams{flex:1}
+.pvs-mp-vs{color:#bbb;font-size:7.5pt;margin:0 3pt}
+.pvs-mp-winner{min-width:70pt;font-weight:700;color:#1a5c1a;text-align:right;flex-shrink:0}
 .pvs-leg{margin:0}.pvs-leg-row{font-size:8pt;padding:2pt 6pt;border-bottom:.3pt solid #ebebeb;line-height:1.5}
 .pvs-leg-cat{font-weight:700;color:#1a3a5c;display:inline-block;min-width:105pt;margin-right:4pt}
 @media(max-width:600px){
@@ -900,9 +906,11 @@ const KO_ROUNDS=[["GQ","Qualifikation fürs 16tel-Finale (32 Teams, je +3 Pkt)",
   ["VF","Halbfinale-Teilnehmer (4 Teams, je +15 Pkt)","09.–12.07."],
   ["P3","Platz 3 (Teilnehmer +10, Sieger +15)","18.07."],
   ["F","Finalisten (2 Teams, je +20 Pkt)","19.07."],["WM","Weltmeister (+25 Pkt)",""]];
+// Bracket-Paarungen (spiegelt tippzettel.html, Quelle: FIFA FWC26 Regulations)
+const S16_PAIRS=[[12,13],[2,17],[4,24],[5,14],[16,20],[8,25],[0,26],[11,27],[6,29],[3,28],[7,21],[22,23],[1,30],[15,18],[9,19],[10,31]];
+const S8_PAIRS=[[2,5],[0,3],[1,4],[6,7],[11,10],[9,8],[14,13],[12,15]];
+const VF_PAIRS=[[0,1],[4,5],[2,3],[6,7]];
 let selected=new Set(DATA.players.map(p=>p.name));
-
-function badge(pts){
   if(pts===null||pts===undefined) return '<span class="badge op">· Offen</span>';
   const cfg={4:["ex","⚽ Exakt +4"],3:["df","✓ Tordiff +3"],2:["td","≈ Tendenz +2"],0:["ms","✗ Daneben"]};
   const [cls,lbl]=cfg[pts]||["op","?"];
@@ -1171,48 +1179,87 @@ function buildPlayerPV(p){
   // KO-Runden
   html+='<div class="pvs-sec">KO-Runden</div>';
 
-  const koTipps=p.ko_tipps;
-  const koDef=[
-    {id:'S16',lbl:'Achtelfinale-Teilnehmer · 16 Teams · je +5 Pkt',actual:(DATA.ko['S16']||[])},
-    {id:'S8', lbl:'Viertelfinale-Teilnehmer · 8 Teams · je +10 Pkt',actual:(DATA.ko['S8']||[])},
-    {id:'VF', lbl:'Halbfinale-Teilnehmer · 4 Teams · je +15 Pkt',actual:(DATA.ko['VF']||[])},
-    {id:'HF', lbl:'Finalisten · 2 Teams · je +20 Pkt',actual:(DATA.ko['HF']||[])},
-  ];
-  for(const {id,lbl,actual} of koDef){
-    const teams=Array.isArray(koTipps[id])?koTipps[id]:[];
-    const cnt=teams.filter(t=>t&&t!=='').length;
-    html+=`<div class="pvs-ko-hdr">${lbl} · ${cnt}/${id==='HF'?2:id==='VF'?4:id==='S8'?8:16} getippt</div>`;
-    html+='<div class="pvs-qs-grid">';
-    teams.forEach((t,i)=>{
-      const hit=t&&actual.includes(t.toLowerCase());
-      html+=`<div class="pvs-qs-item" style="${hit?'color:#1b5e20;font-weight:700':''}">${t||'–'}</div>`;
-    });
-    html+='</div>';
+  function pvMatchRow(label,tA,tB,winner,actualA,actualB){
+    const norm=s=>s?s.toLowerCase().trim():'';
+    const wA=winner&&norm(winner)===norm(tA);
+    const wB=winner&&norm(winner)===norm(tB);
+    const hitA=actualA&&actualA.includes(norm(tA));
+    const hitB=actualB&&actualB.includes(norm(tB));
+    const styleA=wA?'font-weight:800;color:#1a5c1a':(tA&&tA!=='?'?'':(tA=tA||'?','color:#bbb'));
+    const styleB=wB?'font-weight:800;color:#1a5c1a':(tB&&tB!=='?'?'':(tB=tB||'?','color:#bbb'));
+    const check=winner?' <span style="color:#2e7d32">✓</span>':'';
+    return `<div class="pvs-match-pair"><span class="pvs-mp-lbl">${label}</span>`
+      +`<span class="pvs-mp-teams"><span style="${styleA}">${tA||'?'}</span>`
+      +` <span class="pvs-mp-vs">vs</span> `
+      +`<span style="${styleB}">${tB||'?'}</span></span>`
+      +`<span class="pvs-mp-winner">${winner?winner+check:'–'}</span></div>`;
   }
 
-  // Platz 3 – Teilnehmer aus ko_display (HF-Verlierer), Sieger aus ko_display.P3
+  const koTipps=p.ko_tipps;
+  const s16tips=Array.isArray(koTipps['S16'])?koTipps['S16']:[];
+  const s8tips =Array.isArray(koTipps['S8']) ?koTipps['S8'] :[];
+  const vftips =Array.isArray(koTipps['VF']) ?koTipps['VF'] :[];
+  const hftips =Array.isArray(koTipps['HF']) ?koTipps['HF'] :[];
+  const actualS16=(DATA.ko['S16']||[]);
+  const actualS8 =(DATA.ko['S8'] ||[]);
+  const actualVF =(DATA.ko['VF'] ||[]);
+  const actualHF =(DATA.ko['HF'] ||[]);
+
+  // S16 – GQ-Teams als Basis (Qualifizierer-Reihenfolge), Sieger = s16tips
+  const gqAll=p.gq_teams||[];
+  const cnt16=s16tips.filter(t=>t&&t!=='').length;
+  html+=`<div class="pvs-ko-hdr">Sechzehntelfinale · 16 Spiele · Weiterkommer je +5 Pkt · ${cnt16}/16 getippt</div>`;
+  S16_PAIRS.forEach(([ai,bi],i)=>{
+    const tA=gqAll[ai]||'?', tB=gqAll[bi]||'?';
+    html+=pvMatchRow(`Sp.${i+1}`,tA,tB,s16tips[i]||null,actualS16,actualS16);
+  });
+
+  // S8 – s16tips als Basis
+  const cnt8=s8tips.filter(t=>t&&t!=='').length;
+  html+=`<div class="pvs-ko-hdr">Achtelfinale · 8 Spiele · Weiterkommer je +10 Pkt · ${cnt8}/8 getippt</div>`;
+  S8_PAIRS.forEach(([ai,bi],i)=>{
+    const tA=s16tips[ai]||'?', tB=s16tips[bi]||'?';
+    html+=pvMatchRow(`Sp.${i+1}`,tA,tB,s8tips[i]||null,actualS8,actualS8);
+  });
+
+  // VF – s8tips als Basis
+  const cntVF=vftips.filter(t=>t&&t!=='').length;
+  html+=`<div class="pvs-ko-hdr">Viertelfinale · 4 Spiele · Weiterkommer je +15 Pkt · ${cntVF}/4 getippt</div>`;
+  VF_PAIRS.forEach(([ai,bi],i)=>{
+    const tA=s8tips[ai]||'?', tB=s8tips[bi]||'?';
+    html+=pvMatchRow(`Sp.${i+1}`,tA,tB,vftips[i]||null,actualVF,actualVF);
+  });
+
+  // HF – vftips[0,1] vs vftips[2,3]
+  const cntHF=hftips.filter(t=>t&&t!=='').length;
+  html+=`<div class="pvs-ko-hdr">Halbfinale · 2 Spiele · Weiterkommer je +20 Pkt · ${cntHF}/2 getippt</div>`;
+  [[0,1],[2,3]].forEach(([ai,bi],i)=>{
+    const tA=vftips[ai]||'?', tB=vftips[bi]||'?';
+    html+=pvMatchRow(`Sp.${i+1}`,tA,tB,hftips[i]||null,actualHF,actualHF);
+  });
+
+  // Platz 3
   const p3participants=(DATA.ko_display&&DATA.ko_display['P3_participants'])||[];
-  const p3winner=(DATA.ko_display&&DATA.ko_display['P3']&&DATA.ko_display['P3'][0])||'–';
-  const p3tip=koTipps['P3']||'–';
-  const p3t1=p3participants[0]||'–', p3t2=p3participants[1]||'–';
+  const p3winner=(DATA.ko_display&&DATA.ko_display['P3']&&DATA.ko_display['P3'][0])||'';
+  const p3tip=koTipps['P3']||null;
   html+='<div class="pvs-ko-hdr">Spiel um Platz 3 · Teilnahme +10 Pkt · Sieger +15 Pkt</div>';
-  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 1</span><span>${p3t1}</span></div>`;
-  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Teilnehmer 2</span><span>${p3t2}</span></div>`;
-  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Mein Tipp – Sieger</span><span>${p3tip}</span></div>`;
+  html+=pvMatchRow('Platz 3',p3participants[0]||'–',p3participants[1]||'–',p3tip,[p3winner.toLowerCase()],[p3winner.toLowerCase()]);
 
-  // Weltmeister
-  const wmtip=koTipps['WM']||'–';
-  html+='<div class="pvs-ko-hdr">Weltmeister · +25 Pkt</div>';
-  html+=`<div class="pvs-ko-row"><span class="pvs-ko-lbl">Weltmeister</span><span>${wmtip}</span></div>`;
+  // Finale
+  const ftip=Array.isArray(koTipps['HF'])?null:null;
+  const wmtip=koTipps['WM']||null;
+  const actualF=(DATA.ko['HF']||[]);
+  html+='<div class="pvs-ko-hdr">Finale · Finalist richtig je +20 Pkt · Weltmeister +25 Pkt</div>';
+  html+=pvMatchRow('Finale',hftips[0]||'?',hftips[1]||'?',wmtip,(DATA.ko['F']||[]),(DATA.ko['F']||[]));
 
-  // Legende
   html+='<div class="pvs-sec">Punktesystem</div>';
   html+=`<div class="pvs-leg">
     <div class="pvs-leg-row"><span class="pvs-leg-cat">Gruppenphase:</span>Exakt +4 · Tordifferenz +3 · Tendenz richtig +2 · Daneben 0 Pkt</div>
     <div class="pvs-leg-row"><span class="pvs-leg-cat">Gr.-Qualifikanten:</span>32 Teams, je +3 Pkt pro richtig getipptem Qualifikanten</div>
-    <div class="pvs-leg-row"><span class="pvs-leg-cat">Achtelfinale-Teilnehmer:</span>16 Teams, je +5 Pkt pro richtig getipptem Team</div>
-    <div class="pvs-leg-row"><span class="pvs-leg-cat">Viertelfinale-Teilnehmer:</span>8 Teams, je +10 Pkt pro richtig getipptem Team</div>
-    <div class="pvs-leg-row"><span class="pvs-leg-cat">Halbfinale-Teilnehmer:</span>4 Teams, je +15 Pkt pro richtig getipptem Team</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Sechzehntelfinale:</span>16 Weiterkommer, je +5 Pkt (Sieger-Tipp grün hervorgehoben)</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Achtelfinale:</span>8 Weiterkommer, je +10 Pkt</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Viertelfinale:</span>4 Weiterkommer, je +15 Pkt</div>
+    <div class="pvs-leg-row"><span class="pvs-leg-cat">Halbfinale:</span>2 Weiterkommer, je +20 Pkt</div>
     <div class="pvs-leg-row"><span class="pvs-leg-cat">Platz 3:</span>Tipp auf Teilnehmer +10 Pkt · Sieger richtig +15 Pkt (max. 25 Pkt)</div>
     <div class="pvs-leg-row"><span class="pvs-leg-cat">Finalisten:</span>Beide richtig +40 · Ein Finalist richtig +20 · Kein Treffer 0 Pkt</div>
     <div class="pvs-leg-row"><span class="pvs-leg-cat">Weltmeister:</span>+25 Pkt</div>
