@@ -380,6 +380,27 @@ const S16_PAIRS = [
   [9, 19],  // Sp.15: 04.07. 00:00 – 1J vs 2H
   [10,31],  // Sp.16: 04.07. 03:30 – 1K vs Dritter (D/E/I/J/L)
 ];
+// Achtelfinale: S8[n] = [S16-idx-A, S16-idx-B] (gemäß FIFA FWC26 Seite 24)
+// M89=W74vsW77, M90=W73vsW75, M91=W76vsW78, M92=W79vsW80,
+// M93=W83vsW84, M94=W81vsW82, M95=W86vsW88, M96=W85vsW87
+const S8_PAIRS = [
+  [2,  5],  // M89: W(S16[2]=1E) vs W(S16[5]=1I)
+  [0,  3],  // M90: W(S16[0]=2A/2B) vs W(S16[3]=1F)
+  [1,  4],  // M91: W(S16[1]=1C) vs W(S16[4]=2E/2I)
+  [6,  7],  // M92: W(S16[6]=1A) vs W(S16[7]=1L)
+  [11, 10], // M93: W(S16[11]=2K/2L) vs W(S16[10]=1H)
+  [9,  8],  // M94: W(S16[9]=1D) vs W(S16[8]=1G)
+  [14, 13], // M95: W(S16[14]=1J) vs W(S16[13]=2D/2G)
+  [12, 15], // M96: W(S16[12]=1B) vs W(S16[15]=1K)
+];
+// Viertelfinale: VF[n] = [S8-idx-A, S8-idx-B] (gemäß FIFA FWC26 Seite 25)
+// M97=W89vsW90, M98=W93vsW94, M99=W91vsW92, M100=W95vsW96
+const VF_PAIRS = [
+  [0, 1],  // M97: W(S8[0]=M89) vs W(S8[1]=M90)
+  [4, 5],  // M98: W(S8[4]=M93) vs W(S8[5]=M94)
+  [2, 3],  // M99: W(S8[2]=M91) vs W(S8[3]=M92)
+  [6, 7],  // M100: W(S8[6]=M95) vs W(S8[7]=M96)
+];
 const KO_ROUNDS = [
   {id:"S16",label:"Sechzehntelfinale",pts:5,  n:16, dates:[
     "28.06.","29.06.","29.06.","30.06.",
@@ -985,6 +1006,22 @@ function getMatchTeams(roundId, matchIdx) {
     const qs = calcQualifiers();
     const [ai,bi] = S16_PAIRS[matchIdx];
     return [qs[ai] || {team:'?',src:''}, qs[bi] || {team:'?',src:''}];
+  }
+  if (roundId === 'S8') {
+    const [ai,bi] = S8_PAIRS[matchIdx];
+    const wA = koPick.S16[ai], wB = koPick.S16[bi];
+    return [
+      {team: wA||'?', src: wA ? '' : `S16 Sp.${ai+1}`},
+      {team: wB||'?', src: wB ? '' : `S16 Sp.${bi+1}`},
+    ];
+  }
+  if (roundId === 'VF') {
+    const [ai,bi] = VF_PAIRS[matchIdx];
+    const wA = koPick.S8[ai], wB = koPick.S8[bi];
+    return [
+      {team: wA||'?', src: wA ? '' : `S8 Sp.${ai+1}`},
+      {team: wB||'?', src: wB ? '' : `S8 Sp.${bi+1}`},
+    ];
   }
   const prevId = ROUND_IDS[ROUND_IDS.indexOf(roundId) - 1];
   const wA = koPick[prevId][matchIdx*2];
