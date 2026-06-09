@@ -911,6 +911,8 @@ const S16_PAIRS=[[12,13],[2,17],[4,24],[5,14],[16,20],[8,25],[0,26],[11,27],[6,2
 const S8_PAIRS=[[2,5],[0,3],[1,4],[6,7],[11,10],[9,8],[14,13],[12,15]];
 const VF_PAIRS=[[0,1],[4,5],[2,3],[6,7]];
 let selected=new Set(DATA.players.map(p=>p.name));
+
+function badge(pts){
   if(pts===null||pts===undefined) return '<span class="badge op">· Offen</span>';
   const cfg={4:["ex","⚽ Exakt +4"],3:["df","✓ Tordiff +3"],2:["td","≈ Tendenz +2"],0:["ms","✗ Daneben"]};
   const [cls,lbl]=cfg[pts]||["op","?"];
