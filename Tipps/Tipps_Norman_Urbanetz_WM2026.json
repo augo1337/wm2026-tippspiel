@@ -1,6 +1,6 @@
 {
   "name": "Norman Urbanetz",
-  "exported": "2026-06-08T08:48:07.941Z",
+  "exported": "2026-06-09T15:10:37.932Z",
   "gruppenphase": {
     "[Gr.A] Mexiko vs Südafrika (11.06.)": "2:1",
     "[Gr.A] Südkorea vs Tschechien (12.06.)": "1:0",
@@ -79,12 +79,12 @@
     "Tschechien",
     "Brasilien",
     "Elfenbeinküste",
-    "Niederlande",
+    "Marokko",
     "Deutschland",
     "Frankreich",
-    "Ecuador",
+    "Südkorea",
     "England",
-    "Ägypten",
+    "Mexiko",
     "Türkei",
     "Spanien",
     "Kolumbien",
@@ -94,29 +94,29 @@
     "Portugal"
   ],
   "S8": [
-    "Brasilien",
-    "Elfenbeinküste",
     "Frankreich",
+    "Marokko",
+    "Brasilien",
     "England",
-    "Türkei",
     "Spanien",
-    "Belgien",
-    "Argentinien"
+    "Mexiko",
+    "Argentinien",
+    "Portugal"
   ],
   "VF": [
-    "Brasilien",
     "Frankreich",
     "Spanien",
+    "England",
     "Argentinien"
   ],
   "HF": [
     "Frankreich",
-    "Spanien"
+    "England"
   ],
-  "P3": "Argentinien",
+  "P3": "Spanien",
   "F": [
     "Frankreich",
-    "Spanien"
+    "England"
   ],
   "WM": "Frankreich"
 }
