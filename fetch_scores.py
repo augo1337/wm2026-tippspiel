@@ -251,18 +251,48 @@ def parse_matches(api_matches):
 # ERGEBNISSE.XLSX SCHREIBEN
 # ──────────────────────────────────────────────────────────────
 def write_ergebnisse(gs_results, ko_results):
+    # Vorhandene valide Ergebnisse laden und mit neuen mergen
+    existing_gs = {}
+    existing_ko = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM"]}
+    if ERGEBNISSE.exists():
+        try:
+            wb_old = openpyxl.load_workbook(ERGEBNISSE)
+            if "Gruppenphase" in wb_old.sheetnames:
+                for row in wb_old["Gruppenphase"].iter_rows(min_row=2, values_only=True):
+                    mid, _, _, _, score = row[0], row[1], row[2], row[3], row[4]
+                    if mid and score:
+                        import re as _re
+                        if _re.match(r"^\d+:\d+$", str(score).strip()):
+                            existing_gs[str(mid)] = str(score).strip()
+            for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+                if runde in wb_old.sheetnames:
+                    teams = []
+                    for row in wb_old[runde].iter_rows(min_row=2, values_only=True):
+                        val = row[1] if len(row) > 1 else row[0]
+                        if val:
+                            teams.append(str(val).strip())
+                    existing_ko[runde] = teams
+        except Exception as e:
+            print(f"  Hinweis: Konnte alte Ergebnisse nicht lesen: {e}")
+
+    # Neue Ergebnisse über alte mergen (neue überschreiben alte)
+    merged_gs = {**existing_gs, **gs_results}
+    merged_ko = {}
+    for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+        merged_ko[runde] = ko_results.get(runde) if ko_results.get(runde) else existing_ko.get(runde, [])
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Gruppenphase"
     ws.append(["ID", "Heim", "Gast", "Datum", "Ergebnis"])
     for m in GRUPPENSPIELE:
         ws.append([m["id"], m["heim"], m["gast"], m["datum"],
-                   gs_results.get(m["id"], "")])
+                   merged_gs.get(m["id"], "")])
 
     for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
         ws2 = wb.create_sheet(runde)
         ws2.append(["Slot", "Team"])
-        for i, team in enumerate(ko_results.get(runde, []), 1):
+        for i, team in enumerate(merged_ko.get(runde, []), 1):
             ws2.append([i, team])
 
     wb.save(ERGEBNISSE)

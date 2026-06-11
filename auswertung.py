@@ -265,7 +265,9 @@ def read_ergebnisse(path):
     for row in gs.iter_rows(min_row=2, values_only=True):
         match_id, _, _, _, score = row[0], row[1], row[2], row[3], row[4]
         if match_id and score:
-            results[str(match_id)] = str(score).strip()
+            s = str(score).strip()
+            if re.match(r"^\d+:\d+$", s):  # nur valide Ergebnisse (kein "None:None")
+                results[str(match_id)] = s
 
     # KO-Runden
     ko_results = {}
