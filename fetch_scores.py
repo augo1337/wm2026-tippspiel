@@ -311,12 +311,30 @@ def main():
         print("Workflow wartet auf Tipp-Dateien – kein Fehler.")
         sys.exit(0)
 
-    # Nur API-Abruf überspringen wenn kein Spiel aktiv – Rangliste immer neu generieren
-    if not is_match_window():
-        print("\nKein WM-Spiel im aktiven Zeitfenster – überspringe API-Abruf.")
+    # Fehlende Ergebnisse ermitteln (aus vorhandener xlsx)
+    existing_gs = {}
+    if ERGEBNISSE.exists():
+        try:
+            import re as _re2
+            _wb = openpyxl.load_workbook(ERGEBNISSE)
+            if "Gruppenphase" in _wb.sheetnames:
+                for _row in _wb["Gruppenphase"].iter_rows(min_row=2, values_only=True):
+                    _mid, _score = _row[0], _row[4]
+                    if _mid and _score and _re2.match(r"^\d+:\d+$", str(_score).strip()):
+                        existing_gs[str(_mid)] = str(_score).strip()
+        except Exception:
+            pass
+    missing_results = len(GRUPPENSPIELE) - len(existing_gs)
+
+    # API abrufen wenn: Spiel im aktiven Zeitfenster ODER noch fehlende Ergebnisse
+    if not is_match_window() and missing_results == 0:
+        print("\nKein WM-Spiel im aktiven Zeitfenster und alle Ergebnisse vorhanden – überspringe API-Abruf.")
     else:
-        # Ergebnisse abrufen
-        print("\nHole Ergebnisse von football-data.org ...")
+        if is_match_window():
+            print("\nSpiel im aktiven Zeitfenster – hole Ergebnisse ...")
+        else:
+            print(f"\n{missing_results} fehlende Ergebnisse – hole Ergebnisse trotz inaktivem Zeitfenster ...")
+
         api_matches = fetch_matches()
 
         if not api_matches:
