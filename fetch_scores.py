@@ -220,7 +220,10 @@ def parse_matches(api_matches):
                 if match_id:
                     h = m["score"]["fullTime"]["home"]
                     a = m["score"]["fullTime"]["away"]
-                    gs_results[match_id] = f"{h}:{a}"
+                    if h is not None and a is not None:
+                        gs_results[match_id] = f"{h}:{a}"
+                    else:
+                        print(f"  Warnung: Kein Ergebnis für {heim_de} vs {gast_de} (fullTime null)")
                 else:
                     unmatched.append(f"{heim_de} vs {gast_de}")
 
