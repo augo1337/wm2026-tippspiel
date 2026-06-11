@@ -19,8 +19,17 @@ import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+try:
+    from zoneinfo import ZoneInfo
+    BERLIN_TZ = ZoneInfo("Europe/Berlin")
+except ImportError:
+    BERLIN_TZ = timezone(timedelta(hours=2))  # CEST fallback
+
+def now_berlin():
+    return datetime.now(timezone.utc).astimezone(BERLIN_TZ)
 
 # ============================================================
 # SPIELPLAN
@@ -600,7 +609,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
         return str(val).strip()
 
     # ── Upcoming-Match-Erkennung ──────────────────────────
-    _now  = datetime.now()
+    _now  = now_berlin().replace(tzinfo=None)
     _soon = (_now + timedelta(days=2)).date()
     def _is_kommend(datum_str, has_result):
         if has_result:
@@ -661,7 +670,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
     ko_res_display["P3_participants"] = p3_participants
 
     filled  = sum(1 for v in gs_results.values() if v)
-    ts      = datetime.now().strftime("%d.%m.%Y %H:%M Uhr")
+    ts      = now_berlin().strftime("%d.%m.%Y %H:%M Uhr")
     leader  = rows[0]["Name"] if rows else "–"
     lpts    = rows[0]["Gesamt"] if rows else 0
     n       = len(rows)
@@ -680,7 +689,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             _history = []
     _curr_pts = {r["Name"]: r["Gesamt"] for r in rows}
     if not _history or _history[-1].get("pts") != _curr_pts:
-        _history.append({"ts": datetime.now().strftime("%d.%m %H:%M"), "pts": _curr_pts})
+        _history.append({"ts": now_berlin().strftime("%d.%m %H:%M"), "pts": _curr_pts})
     _history = _history[-120:]
     history_json = _json.dumps(_history, ensure_ascii=False)
 
