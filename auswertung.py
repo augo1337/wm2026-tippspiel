@@ -597,8 +597,10 @@ def write_ko_details(wb, rows, ko_results):
 # HTML RANGLISTE  – interaktiv mit Spielerfilter & Detailansicht
 # ============================================================
 
-def write_html_rangliste(rows, gs_results, ko_results, out_path):
+def write_html_rangliste(rows, gs_results, ko_results, out_path, gs_live=None):
     import json as _json
+    if gs_live is None:
+        gs_live = {}
 
     def _clean(val):
         if val is None:
@@ -630,11 +632,13 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path):
             ergebnis = _clean(d.get("result"))
             tipp     = _clean(d.get("tipp"))
             pts      = d.get("punkte", 0) if ergebnis else None
+            live     = gs_live.get(m["id"], "")  # z.B. "1:0 (67')"
             spiele.append({
                 "id": m["id"], "gr": m["gruppe"],
                 "heim": m["heim"], "gast": m["gast"], "datum": m["datum"], "uhrzeit": m.get("uhrzeit", ""),
                 "tipp": tipp, "ergebnis": ergebnis, "punkte": pts,
-                "kommend": _is_kommend(m["datum"], bool(ergebnis)),
+                "live": live,
+                "kommend": _is_kommend(m["datum"], bool(ergebnis) or bool(live)),
             })
 
         ko_tipps = {}
@@ -1048,7 +1052,9 @@ function renderDetails(){
       }).join('');
       const datumHtml=`${s.datum}${s.uhrzeit?`<br><span class="mi-time">${s.uhrzeit}</span>`:''}`;
       const spielHtml=`<span class="gr-badge">${s.gr}</span>${s.heim} <span style="color:#3a5f84">vs</span> ${s.gast}`;
-      return `<tr${trCls?` class="${trCls}"`:''}><td class="mi">${datumHtml}</td><td class="mi-t">${spielHtml}</td><td class="mi-r">${hasRes?s.ergebnis:s.kommend?'▶':'–'}</td>${plCells}</tr>`;
+      const hasLive=s.live&&s.live!=='';
+      const ergHtml=hasRes?s.ergebnis:hasLive?`<span style="color:#e53935;font-weight:700">▶ ${s.live}</span>`:s.kommend?'▶':'–';
+      return `<tr${trCls?` class="${trCls}"`:''}><td class="mi">${datumHtml}</td><td class="mi-t">${spielHtml}</td><td class="mi-r">${ergHtml}</td>${plCells}</tr>`;
     }).join('');
     const subs=players.map(p=>{
       const pts=p.spiele.filter(s=>s.punkte!==null&&s.punkte!==undefined).reduce((a,s)=>a+(s.punkte||0),0);
@@ -1472,8 +1478,19 @@ def main():
 
     gs_results, ko_results = read_ergebnisse(ergebnisse_path)
 
+    # Live-Scores einlesen (falls vorhanden)
+    live_path = Path(__file__).parent / "live_scores.json"
+    gs_live = {}
+    if live_path.exists():
+        try:
+            gs_live = json.loads(live_path.read_text(encoding="utf-8"))
+        except Exception:
+            gs_live = {}
+
     print(f"Teilnehmer gefunden: {len(df)}")
     print(f"Gruppenspiel-Ergebnisse eingetragen: {sum(1 for v in gs_results.values() if v)}/72")
+    if gs_live:
+        print(f"Live-Spiele: {len(gs_live)}")
 
     rows = auswerten(df, gs_results, ko_results)
 
@@ -1488,7 +1505,7 @@ def main():
     wb.save(out_path)
 
     html_path = Path("Rangliste.html")
-    write_html_rangliste(rows, gs_results, ko_results, html_path)
+    write_html_rangliste(rows, gs_results, ko_results, html_path, gs_live=gs_live)
 
     print(f"\n✓ Excel gespeichert:  {out_path}")
     print(f"✓ HTML gespeichert:   {html_path}")

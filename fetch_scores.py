@@ -217,11 +217,43 @@ def parse_matches(api_events):
         heim_de = to_de(home["team"]["displayName"])
         gast_de = to_de(away["team"]["displayName"])
 
-        if status_name not in ESPN_FINISHED:
+ESPN_LIVE = {"STATUS_IN_PROGRESS", "STATUS_HALFTIME"}
+
+def parse_matches(api_events):
+    gs_lookup = {(m["heim"], m["gast"]): m["id"] for m in GRUPPENSPIELE}
+
+    gs_results = {}
+    gs_live = {}   # laufende Spiele: match_id → "1:0 (67')"
+    ko_results = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM"]}
+    unmatched = []
+
+    for event in api_events:
+        comps = event.get("competitions", [{}])[0]
+        status_name = comps.get("status", {}).get("type", {}).get("name", "")
+        status_detail = comps.get("status", {}).get("displayClock", "")
+        note = (comps.get("notes") or [{}])[0].get("headline", "").upper()
+        teams = comps.get("competitors", [])
+        if len(teams) != 2:
             continue
+
+        home = next((t for t in teams if t.get("homeAway") == "home"), teams[0])
+        away = next((t for t in teams if t.get("homeAway") == "away"), teams[1])
+        heim_de = to_de(home["team"]["displayName"])
+        gast_de = to_de(away["team"]["displayName"])
 
         h_score = home.get("score")
         a_score = away.get("score")
+
+        # ── Live-Zwischenstand ──
+        if status_name in ESPN_LIVE and h_score is not None and a_score is not None:
+            match_id = gs_lookup.get((heim_de, gast_de))
+            if match_id:
+                clock = f" ({status_detail})" if status_detail else ""
+                gs_live[match_id] = f"{int(h_score)}:{int(a_score)}{clock}"
+
+        if status_name not in ESPN_FINISHED:
+            continue
+
         if h_score is None or a_score is None:
             print(f"  Warnung: Kein Score für {heim_de} vs {gast_de}")
             continue
@@ -257,7 +289,7 @@ def parse_matches(api_events):
     if unmatched:
         print(f"  Warnung: {len(unmatched)} Spiele nicht zugeordnet: {unmatched[:5]}")
 
-    return gs_results, ko_results
+    return gs_results, ko_results, gs_live
 
 # ──────────────────────────────────────────────────────────────
 # ERGEBNISSE.XLSX SCHREIBEN
@@ -353,10 +385,13 @@ def main():
             print("Keine Spieldaten verfügbar – überspringe API-Update.")
         else:
             print(f"  {len(api_matches)} Spiele in der API gefunden")
-            gs_results, ko_results = parse_matches(api_matches)
+            gs_results, ko_results, gs_live = parse_matches(api_matches)
 
             finished_gs = sum(1 for v in gs_results.values() if v)
+            live_gs = len(gs_live)
             print(f"  Gruppenphase abgeschlossen: {finished_gs}/72")
+            if live_gs:
+                print(f"  Live laufend: {live_gs} Spiel(e): {list(gs_live.values())}")
             ko_info = {k: len(v) for k, v in ko_results.items() if v}
             if ko_info:
                 print(f"  KO-Teams bekannt: {ko_info}")
@@ -364,6 +399,19 @@ def main():
             # Ergebnisse.xlsx aktualisieren
             write_ergebnisse(gs_results, ko_results)
             print(f"\n✓ Ergebnisse.xlsx aktualisiert")
+
+            # Live-Scores als JSON speichern für auswertung.py
+            import json as _json
+            live_path = BASE / "live_scores.json"
+            with open(live_path, "w", encoding="utf-8") as _f:
+                _json.dump(gs_live, _f, ensure_ascii=False)
+
+    # Live-Datei anlegen falls noch nicht vorhanden
+    import json as _json
+    live_path = BASE / "live_scores.json"
+    if not live_path.exists():
+        with open(live_path, "w") as _f:
+            _json.dump({}, _f)
 
     # Rangliste immer neu erstellen (auch vor WM-Start, damit neue Tipps sichtbar werden)
     print("\nErstelle Rangliste ...")
