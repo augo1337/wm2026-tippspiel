@@ -40,6 +40,6 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Rangliste.html Ergebnisse.xlsx 2>/dev/null || true
+          git add Rangliste.html Ergebnisse.xlsx live_scores.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "Auto-Update: Rangliste $(date -u '+%Y-%m-%d %H:%M') UTC"
           git push || true
