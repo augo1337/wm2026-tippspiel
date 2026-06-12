@@ -76,8 +76,8 @@ MATCH_KICKOFFS_UTC = [
 ]
 
 # Zeitfenster: wie viele Minuten nach Anstoß darf ein Run noch als "relevant" gelten?
-# 210 min = 90 min Spielzeit + 30 min Verlängerung + 30 min Elfmeter + 30 min Puffer
-MATCH_WINDOW_MIN = 210
+# 360 min = 90 min Spielzeit + 30 min Verlängerung + 30 min Elfmeter + 120 min API-Verzögerungspuffer
+MATCH_WINDOW_MIN = 360
 
 def is_match_window():
     """True wenn gerade ein WM-Spiel läuft oder erst kürzlich geendet hat."""
