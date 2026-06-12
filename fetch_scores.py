@@ -85,20 +85,14 @@ def is_match_window():
     window = timedelta(minutes=MATCH_WINDOW_MIN)
     return any(kickoff <= now <= kickoff + window for kickoff in MATCH_KICKOFFS_UTC)
 
-# API KONFIGURATION
 # ──────────────────────────────────────────────────────────────
-API_KEY  = os.environ.get("FOOTBALL_DATA_API_KEY", "f64e2692b1d34d1fb6287cbc2b6659fe")
-BASE_URL = "https://api.football-data.org/v4"
-
-# ──────────────────────────────────────────────────────────────
-# TEAM-NAMEN MAPPING  (football-data.org Englisch → Deutsch)
+# TEAM-NAMEN MAPPING  (ESPN Englisch → Deutsch)
 # ──────────────────────────────────────────────────────────────
 TEAM_MAP = {
     "Mexico":                       "Mexiko",
     "South Africa":                 "Südafrika",
     "Korea Republic":               "Südkorea",
     "South Korea":                  "Südkorea",
-    "Republic of Korea":            "Südkorea",
     "Czechia":                      "Tschechien",
     "Czech Republic":               "Tschechien",
     "Canada":                       "Kanada",
@@ -156,7 +150,7 @@ TEAM_MAP = {
 }
 
 def to_de(name):
-    """Englischen API-Namen → Deutschen Namen."""
+    """Englischen ESPN-Namen → Deutschen Namen."""
     return TEAM_MAP.get(name, name)
 
 # ──────────────────────────────────────────────────────────────
@@ -166,76 +160,94 @@ sys.path.insert(0, str(BASE))
 from auswertung import GRUPPENSPIELE
 
 # ──────────────────────────────────────────────────────────────
-# API ABRUF
+# ESPN API ABRUF  (kostenlos, kein Key nötig, sofortige Ergebnisse)
 # ──────────────────────────────────────────────────────────────
+ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard"
+
 def fetch_matches():
-    url = f"{BASE_URL}/competitions/WC/matches"
-    headers = {"X-Auth-Token": API_KEY}
-    r = requests.get(url, headers=headers, timeout=15)
-    if r.status_code == 403:
-        print("FEHLER: API Key ungültig oder kein Zugriff auf WC-Daten.")
-        sys.exit(1)
-    if r.status_code == 404:
-        print("HINWEIS: WM 2026 noch nicht in der API verfügbar.")
+    """Holt alle WM 2026 Spiele von der ESPN API."""
+    r = requests.get(ESPN_URL,
+                     params={"dates": "20260611-20260719", "limit": 200},
+                     timeout=15)
+    if r.status_code != 200:
+        print(f"FEHLER: ESPN API Status {r.status_code}")
         return []
-    r.raise_for_status()
-    return r.json().get("matches", [])
+    events = r.json().get("events", [])
+    if not events:
+        print("HINWEIS: ESPN API liefert keine Spiele.")
+    return events
 
 # ──────────────────────────────────────────────────────────────
-# ERGEBNISSE AUSWERTEN
-# WM 2026 Rundenstruktur (48 Teams):
-#   ROUND_OF_32   → unser S16  (32 spielen, 16 kommen weiter)
-#   ROUND_OF_16   → unser S8
-#   QUARTER_FINALS→ unser VF
-#   SEMI_FINALS   → unser HF
-#   FINAL         → unser F + WM
+# ERGEBNISSE AUSWERTEN (ESPN Format)
+# ESPN status.type.name:
+#   STATUS_SCHEDULED  → noch nicht gespielt
+#   STATUS_IN_PROGRESS → läuft
+#   STATUS_FULL_TIME  → beendet (90 min)
+#   STATUS_FINAL_AET  → nach Verlängerung
+#   STATUS_FINAL_PEN  → nach Elfmeter
+# ESPN note: "GROUP STAGE", "ROUND OF 32", "ROUND OF 16", etc.
 # ──────────────────────────────────────────────────────────────
-STAGE_MAP = {
-    "ROUND_OF_32":    "S16",
-    "ROUND_OF_16":    "S8",
-    "QUARTER_FINALS": "VF",
-    "SEMI_FINALS":    "HF",
-    "FINAL":          "F",
+ESPN_KO_MAP = {
+    "ROUND OF 32":   "S16",
+    "ROUND OF 16":   "S8",
+    "QUARTERFINALS": "VF",
+    "SEMIFINALS":    "HF",
+    "FINAL":         "F",
 }
+ESPN_FINISHED = {"STATUS_FULL_TIME", "STATUS_FINAL_AET", "STATUS_FINAL_PEN"}
 
-def parse_matches(api_matches):
-    # Lookup: (heim_de, gast_de) → match_id
+def parse_matches(api_events):
     gs_lookup = {(m["heim"], m["gast"]): m["id"] for m in GRUPPENSPIELE}
 
     gs_results = {}
     ko_results = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM"]}
-
     unmatched = []
 
-    for m in api_matches:
-        stage  = m.get("stage", "")
-        status = m.get("status", "")
-        heim_de = to_de(m["homeTeam"]["name"])
-        gast_de = to_de(m["awayTeam"]["name"])
+    for event in api_events:
+        comps = event.get("competitions", [{}])[0]
+        status_name = comps.get("status", {}).get("type", {}).get("name", "")
+        note = (comps.get("notes") or [{}])[0].get("headline", "").upper()
+        teams = comps.get("competitors", [])
+        if len(teams) != 2:
+            continue
+
+        # ESPN liefert home zuerst (teams[0]) wenn homeAway="home"
+        home = next((t for t in teams if t.get("homeAway") == "home"), teams[0])
+        away = next((t for t in teams if t.get("homeAway") == "away"), teams[1])
+        heim_de = to_de(home["team"]["displayName"])
+        gast_de = to_de(away["team"]["displayName"])
+
+        if status_name not in ESPN_FINISHED:
+            continue
+
+        h_score = home.get("score")
+        a_score = away.get("score")
+        if h_score is None or a_score is None:
+            print(f"  Warnung: Kein Score für {heim_de} vs {gast_de}")
+            continue
 
         # ── Gruppenphase ──
-        if stage == "GROUP_STAGE":
-            if status == "FINISHED":
-                match_id = gs_lookup.get((heim_de, gast_de))
-                if match_id:
-                    h = m["score"]["fullTime"]["home"]
-                    a = m["score"]["fullTime"]["away"]
-                    if h is not None and a is not None:
-                        gs_results[match_id] = f"{h}:{a}"
-                    else:
-                        print(f"  Warnung: Kein Ergebnis für {heim_de} vs {gast_de} (fullTime null)")
-                else:
-                    unmatched.append(f"{heim_de} vs {gast_de}")
+        if "GROUP" in note or note == "":
+            match_id = gs_lookup.get((heim_de, gast_de))
+            if match_id:
+                gs_results[match_id] = f"{int(h_score)}:{int(a_score)}"
+            else:
+                unmatched.append(f"{heim_de} vs {gast_de}")
 
         # ── KO-Runden ──
-        elif stage in STAGE_MAP and status == "FINISHED":
-            runde = STAGE_MAP[stage]
-            winner_side = m["score"].get("winner")
-            winner = heim_de if winner_side == "HOME_TEAM" else (
-                     gast_de if winner_side == "AWAY_TEAM" else None)
+        else:
+            runde = next((v for k, v in ESPN_KO_MAP.items() if k in note), None)
+            if not runde:
+                continue
+            winner_flag = home.get("winner")
+            if winner_flag is True:
+                winner = heim_de
+            elif winner_flag is False:
+                winner = gast_de
+            else:
+                winner = None
 
-            if stage == "FINAL":
-                # Beide Finalisten speichern (für Finale-Bonus)
+            if runde == "F":
                 ko_results["F"] = [heim_de, gast_de]
                 if winner:
                     ko_results["WM"] = [winner]
@@ -243,7 +255,7 @@ def parse_matches(api_matches):
                 ko_results[runde].append(winner)
 
     if unmatched:
-        print(f"  Warnung: {len(unmatched)} Spiele nicht zugeordnet: {unmatched[:3]}")
+        print(f"  Warnung: {len(unmatched)} Spiele nicht zugeordnet: {unmatched[:5]}")
 
     return gs_results, ko_results
 
