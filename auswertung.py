@@ -332,7 +332,9 @@ def read_responses(path):
 # AUSWERTUNG
 # ============================================================
 
-def auswerten(df, gs_results, ko_results):
+def auswerten(df, gs_results, ko_results, gs_live=None):
+    if gs_live is None:
+        gs_live = {}
     rows = []
     for _, resp in df.iterrows():
         name = str(resp.get(NAME_COL, "Unbekannt")).strip()
@@ -340,15 +342,27 @@ def auswerten(df, gs_results, ko_results):
             continue
 
         pts_gruppe = 0
+        pts_gruppe_live = 0  # vorläufige Punkte aus laufenden Spielen
         detail_gruppe = {}
         for m in GRUPPENSPIELE:
             col = match_col(m)
             tipp = resp.get(col)
             result = gs_results.get(m["id"])
+            live_score = gs_live.get(m["id"])  # z.B. "1:0 (67')"
+
             p = calc_group_pts(tipp, result)
             pts_gruppe += p
+
+            # Vorläufige Live-Punkte (nur Tendenz/Torstand, kein Endstand)
+            p_live = 0
+            if not result and live_score:
+                live_clean = live_score.split(" (")[0]  # "1:0" ohne "(67')"
+                p_live = calc_group_pts(tipp, live_clean)
+                pts_gruppe_live += p_live
+
             detail_gruppe[m["id"]] = {
                 "tipp": tipp, "result": result, "punkte": p,
+                "live_score": live_score, "punkte_live": p_live if (not result and live_score) else None,
                 "heim": m["heim"], "gast": m["gast"], "datum": m["datum"]
             }
 
@@ -366,9 +380,12 @@ def auswerten(df, gs_results, ko_results):
         pts_ko["WM"] = calc_wm_pts(resp.get(KO_COLS["WM"][0]), ko_results.get("WM", [None])[0] if ko_results.get("WM") else None)
 
         total = pts_gruppe + sum(pts_ko.values())
+        total_live = total + pts_gruppe_live  # Gesamt inkl. laufende Spiele
         rows.append({
             "Name": name,
             "Gesamt": total,
+            "GesamtLive": total_live,
+            "PtsLive": pts_gruppe_live,
             "Gruppenphase": pts_gruppe,
             "GQ":  pts_ko.get("GQ", 0),
             "S16": pts_ko.get("S16", 0),
@@ -383,7 +400,9 @@ def auswerten(df, gs_results, ko_results):
             "_gq_pred": sorted([t for t in pred_qualifiers]),
         })
 
-    rows.sort(key=lambda x: x["Gesamt"], reverse=True)
+    # Sortierung: nach GesamtLive (inkl. laufende Spiele) während Live, sonst Gesamt
+    has_live = any(r["PtsLive"] > 0 for r in rows)
+    rows.sort(key=lambda x: x["GesamtLive"] if has_live else x["Gesamt"], reverse=True)
     for i, r in enumerate(rows):
         r["Platz"] = i + 1
     return rows
@@ -633,11 +652,13 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path, gs_live=None):
             tipp     = _clean(d.get("tipp"))
             pts      = d.get("punkte", 0) if ergebnis else None
             live     = gs_live.get(m["id"], "")  # z.B. "1:0 (67')"
+            d_live   = r["_detail"].get(m["id"], {})
+            pts_live = d_live.get("punkte_live")  # vorläufige Punkte (None wenn nicht live)
             spiele.append({
                 "id": m["id"], "gr": m["gruppe"],
                 "heim": m["heim"], "gast": m["gast"], "datum": m["datum"], "uhrzeit": m.get("uhrzeit", ""),
                 "tipp": tipp, "ergebnis": ergebnis, "punkte": pts,
-                "live": live,
+                "live": live, "punkte_live": pts_live,
                 "kommend": _is_kommend(m["datum"], bool(ergebnis) or bool(live)),
             })
 
@@ -650,7 +671,9 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path, gs_live=None):
 
         players_js.append({
             "platz": r["Platz"], "name": r["Name"],
-            "gesamt": r["Gesamt"], "gruppe": r["Gruppenphase"],
+            "gesamt": r["Gesamt"], "gesamt_live": r.get("GesamtLive", r["Gesamt"]),
+            "pts_live": r.get("PtsLive", 0),
+            "gruppe": r["Gruppenphase"],
             "gq": r.get("GQ", 0),
             "s16": r["S16"], "s8": r["S8"],
             "vf": r["VF"], "hf": r.get("HF", 0),
@@ -988,12 +1011,18 @@ function getRankArrow(name){
   return '<span class="arr-eq">=</span>';
 }
 function renderRanking(){
+  const hasLive=DATA.players.some(p=>p.pts_live>0);
   document.getElementById("rankBody").innerHTML=DATA.players.map(p=>{
     const med=p.platz<=3?MEDALS[p.platz-1]:"";
     const cls=[p.platz<=3?`r${p.platz}`:"",selected.has(p.name)?"sel":""].filter(Boolean).join(" ");
+    const ptsDisplay=hasLive
+      ? (p.pts_live>0
+          ? `${p.gesamt} <span style="color:#e53935;font-size:.8rem">+${p.pts_live}▶</span>`
+          : `${p.gesamt}`)
+      : p.gesamt;
     return `<tr class="${cls}" onclick="togglePlayerRow('${p.name.replace(/'/g,"\\\\'")}')">
       <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name} <button class="print-btn" onclick="event.stopPropagation();openPV('${p.name.replace(/'/g,"\\\\'")}')">🖨️</button></td>
-      <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
+      <td class="pts">${ptsDisplay}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
       <td>${p.hf}</td><td>${p.p3}</td><td>${p.wm}</td>
     </tr>`;
@@ -1046,8 +1075,20 @@ function renderDetails(){
         const ps=p.spiele.find(x=>x.id===s.id)||{};
         const tipp=ps.tipp||'–';
         const pts=hasRes?ps.punkte:null;
-        const cls=pts===null?'mcel-op':pts===4?'mcel-ex':pts===3?'mcel-df':pts===2?'mcel-td':'mcel-ms';
-        const sub=pts!==null?`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`:'';
+        const ptsLive=(ps.punkte_live!==null&&ps.punkte_live!==undefined)?ps.punkte_live:null;
+        const hasLiveScore=ps.live&&ps.live!=='';
+        // Live: gelbe Zelle mit ~ Präfix; Endstand: normale Farbe
+        let cls, sub;
+        if(pts!==null){
+          cls=pts===4?'mcel-ex':pts===3?'mcel-df':pts===2?'mcel-td':'mcel-ms';
+          sub=`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`;
+        } else if(hasLiveScore&&ptsLive!==null){
+          cls='mcel-td';  // gelb = vorläufig
+          sub=`<span class="mcel-sub" style="color:#e53935">~${ptsLive>0?'+'+ptsLive:'0'}</span>`;
+        } else {
+          cls='mcel-op';
+          sub='';
+        }
         return `<td class="mcel ${cls}">${tipp}${sub}</td>`;
       }).join('');
       const datumHtml=`${s.datum}${s.uhrzeit?`<br><span class="mi-time">${s.uhrzeit}</span>`:''}`;
@@ -1492,7 +1533,7 @@ def main():
     if gs_live:
         print(f"Live-Spiele: {len(gs_live)}")
 
-    rows = auswerten(df, gs_results, ko_results)
+    rows = auswerten(df, gs_results, ko_results, gs_live=gs_live)
 
     out_path = Path("Rangliste.xlsx")
     wb = openpyxl.Workbook()
