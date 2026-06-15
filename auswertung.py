@@ -703,7 +703,7 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path, gs_live=None):
     leader  = rows[0]["Name"] if rows else "–"
     lpts    = rows[0]["Gesamt"] if rows else 0
     n       = len(rows)
-    data_json = _json.dumps({"players": players_js, "ko": ko_res_js, "ko_display": ko_res_display}, ensure_ascii=False)
+    data_json = _json.dumps({"players": players_js, "ko": ko_res_js, "ko_display": ko_res_display, "live": gs_live}, ensure_ascii=False)
 
     # ── History laden + aktualisieren ────────────────────────
     import re as _re, calendar as _cal
@@ -1011,18 +1011,12 @@ function getRankArrow(name){
   return '<span class="arr-eq">=</span>';
 }
 function renderRanking(){
-  const hasLive=DATA.players.some(p=>p.pts_live>0);
   document.getElementById("rankBody").innerHTML=DATA.players.map(p=>{
     const med=p.platz<=3?MEDALS[p.platz-1]:"";
     const cls=[p.platz<=3?`r${p.platz}`:"",selected.has(p.name)?"sel":""].filter(Boolean).join(" ");
-    const ptsDisplay=hasLive
-      ? (p.pts_live>0
-          ? `${p.gesamt} <span style="color:#e53935;font-size:.8rem">+${p.pts_live}▶</span>`
-          : `${p.gesamt}`)
-      : p.gesamt;
     return `<tr class="${cls}" onclick="togglePlayerRow('${p.name.replace(/'/g,"\\\\'")}')">
       <td class="pl">${med}${getRankArrow(p.name)}${p.platz}.</td><td class="nm">${p.name} <button class="print-btn" onclick="event.stopPropagation();openPV('${p.name.replace(/'/g,"\\\\'")}')">🖨️</button></td>
-      <td class="pts">${ptsDisplay}</td><td>${p.gruppe}</td>
+      <td class="pts">${p.gesamt}</td><td>${p.gruppe}</td>
       <td>${p.gq}</td><td>${p.s16}</td><td>${p.s8}</td><td>${p.vf}</td>
       <td>${p.hf}</td><td>${p.p3}</td><td>${p.wm}</td>
     </tr>`;
@@ -1075,20 +1069,9 @@ function renderDetails(){
         const ps=p.spiele.find(x=>x.id===s.id)||{};
         const tipp=ps.tipp||'–';
         const pts=hasRes?ps.punkte:null;
-        const ptsLive=(ps.punkte_live!==null&&ps.punkte_live!==undefined)?ps.punkte_live:null;
-        const hasLiveScore=ps.live&&ps.live!=='';
-        // Live: gelbe Zelle mit ~ Präfix; Endstand: normale Farbe
-        let cls, sub;
-        if(pts!==null){
-          cls=pts===4?'mcel-ex':pts===3?'mcel-df':pts===2?'mcel-td':'mcel-ms';
-          sub=`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`;
-        } else if(hasLiveScore&&ptsLive!==null){
-          cls='mcel-td';  // gelb = vorläufig
-          sub=`<span class="mcel-sub" style="color:#e53935">~${ptsLive>0?'+'+ptsLive:'0'}</span>`;
-        } else {
-          cls='mcel-op';
-          sub='';
-        }
+        // Keine vorläufigen Punkte während laufender Spiele
+        const cls=pts===null?'mcel-op':pts===4?'mcel-ex':pts===3?'mcel-df':pts===2?'mcel-td':'mcel-ms';
+        const sub=pts!==null?`<span class="mcel-sub">${pts>0?'+'+pts:'0'}</span>`:'';
         return `<td class="mcel ${cls}">${tipp}${sub}</td>`;
       }).join('');
       const datumHtml=`${s.datum}${s.uhrzeit?`<br><span class="mi-time">${s.uhrzeit}</span>`:''}`;
@@ -1351,7 +1334,21 @@ function checkLiveMatch(){
   const active=LIVE_SCHED.find(s=>now>=s[0]&&now<=s[0]+s[2]*60000);
   const banner=document.getElementById('liveBanner');
   const matchTxt=document.getElementById('liveMatch');
-  if(active){banner.classList.add('visible');matchTxt.textContent=active[1];}
+  if(active){
+    banner.classList.add('visible');
+    // Live-Score aus DATA.live anzeigen falls vorhanden
+    const liveScores=DATA.live||{};
+    const liveEntry=Object.entries(liveScores).find(([id,v])=>{
+      const sp=DATA.players[0]&&DATA.players[0].spiele.find(s=>s.id===id);
+      return sp&&(active[1].includes(sp.heim)||active[1].includes(sp.gast));
+    });
+    if(liveEntry){
+      const sp=DATA.players[0].spiele.find(s=>s.id===liveEntry[0]);
+      matchTxt.textContent=`${sp.heim} ${liveEntry[1]} ${sp.gast}`;
+    } else {
+      matchTxt.textContent=active[1];
+    }
+  }
   else{banner.classList.remove('visible');}
 }
 function renderNextUpdate(){
