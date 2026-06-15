@@ -1344,7 +1344,12 @@ function checkLiveMatch(){
     });
     if(liveEntry){
       const sp=DATA.players[0].spiele.find(s=>s.id===liveEntry[0]);
-      matchTxt.textContent=`${sp.heim} ${liveEntry[1]} ${sp.gast}`;
+      // liveEntry[1] = "0:0 (45'+4')" → Score und Minute trennen
+      const liveRaw=liveEntry[1];
+      const minuteMatch=liveRaw.match(/\(([^)]+)\)/);
+      const score=liveRaw.replace(/\s*\([^)]+\)/,'').trim();
+      const minute=minuteMatch?` · ${minuteMatch[1]}`:'';
+      matchTxt.textContent=`${sp.heim} ${score} ${sp.gast}${minute}`;
     } else {
       matchTxt.textContent=active[1];
     }

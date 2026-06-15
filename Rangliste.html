@@ -197,7 +197,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 <div class="hdr">
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
+<<<<<<< Updated upstream
   <div class="hdr-sub">Stand: 15.06.2026 18:55 Uhr · 12/72 Gruppenspiele</div></div>
+=======
+  <div class="hdr-sub">Stand: 15.06.2026 18:59 Uhr · 12/72 Gruppenspiele</div></div>
+>>>>>>> Stashed changes
 </div>
 </div>
 <div class="live-banner" id="liveBanner"><span class="live-dot"></span><span class="live-txt">LIVE:</span>&nbsp;<span class="live-match" id="liveMatch"></span></div>
@@ -239,7 +243,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
 </div>
+<<<<<<< Updated upstream
 <div class="foot">Generiert am 15.06.2026 18:55 Uhr · WM 2026 Tippspiel</div>
+=======
+<div class="foot">Generiert am 15.06.2026 18:59 Uhr · WM 2026 Tippspiel</div>
+>>>>>>> Stashed changes
 <button class="fb-btn" onclick="document.getElementById('fbOverlay').classList.add('open')">💬 Feedback</button>
 <div id="pvModal" onclick="if(event.target===this)closePV()">
   <div class="pv-box">
@@ -671,7 +679,12 @@ function checkLiveMatch(){
     });
     if(liveEntry){
       const sp=DATA.players[0].spiele.find(s=>s.id===liveEntry[0]);
-      matchTxt.textContent=`${sp.heim} ${liveEntry[1]} ${sp.gast}`;
+      // liveEntry[1] = "0:0 (45'+4')" → Score und Minute trennen
+      const liveRaw=liveEntry[1];
+      const minuteMatch=liveRaw.match(/\(([^)]+)\)/);
+      const score=liveRaw.replace(/\s*\([^)]+\)/,'').trim();
+      const minute=minuteMatch?` · ${minuteMatch[1]}`:'';
+      matchTxt.textContent=`${sp.heim} ${score} ${sp.gast}${minute}`;
     } else {
       matchTxt.textContent=active[1];
     }
