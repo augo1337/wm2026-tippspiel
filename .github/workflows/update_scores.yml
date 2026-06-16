@@ -42,4 +42,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Rangliste.html Ergebnisse.xlsx live_scores.json 2>/dev/null || true
           git diff --cached --quiet && git diff -- live_scores.json --quiet || git commit -m "Auto-Update: Rangliste $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git pull --rebase || true
           git push || true
