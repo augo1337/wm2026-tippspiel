@@ -292,12 +292,68 @@ def parse_matches(api_events):
     return gs_results, ko_results, gs_live
 
 # ──────────────────────────────────────────────────────────────
+# GQ BERECHNUNG aus tatsächlichen Ergebnissen
+# Top 2 jeder Gruppe + 8 beste Dritte qualifizieren sich
+# ──────────────────────────────────────────────────────────────
+def _calc_actual_qualifiers(gs_results):
+    import re as _re
+
+    def parse_score(s):
+        if not s:
+            return None
+        m = _re.match(r"^(\d+):(\d+)$", str(s).strip())
+        return (int(m.group(1)), int(m.group(2))) if m else None
+
+    def build_table(group_id):
+        st = {}
+        for m in GRUPPENSPIELE:
+            if m["gruppe"] != group_id:
+                continue
+            for t in (m["heim"], m["gast"]):
+                if t not in st:
+                    st[t] = {"name": t, "pts": 0, "gd": 0, "gf": 0, "played": 0}
+        for m in GRUPPENSPIELE:
+            if m["gruppe"] != group_id:
+                continue
+            r = parse_score(gs_results.get(m["id"]))
+            if r is None:
+                continue
+            hg, ag = r
+            h, a = m["heim"], m["gast"]
+            st[h]["played"] += 1; st[a]["played"] += 1
+            st[h]["gf"] += hg; st[h]["gd"] += hg - ag
+            st[a]["gf"] += ag; st[a]["gd"] += ag - hg
+            if hg > ag:   st[h]["pts"] += 3
+            elif hg < ag: st[a]["pts"] += 3
+            else:         st[h]["pts"] += 1; st[a]["pts"] += 1
+        return sorted(st.values(), key=lambda t: (-t["pts"], -t["gd"], -t["gf"], t["name"]))
+
+    qualifiers = []
+    thirds = []
+    for g in ["A","B","C","D","E","F","G","H","I","J","K","L"]:
+        table = build_table(g)
+        # Nur auswerten wenn alle 3 Spiele der Gruppe gespielt
+        games_played = sum(1 for m in GRUPPENSPIELE if m["gruppe"] == g and gs_results.get(m["id"]))
+        if games_played < 3:
+            continue  # Gruppe noch nicht vollständig
+        if len(table) >= 1: qualifiers.append(table[0]["name"])
+        if len(table) >= 2: qualifiers.append(table[1]["name"])
+        if len(table) >= 3:
+            t3 = table[2]
+            thirds.append({"team": t3["name"], "pts": t3["pts"], "gd": t3["gd"], "gf": t3["gf"]})
+
+    thirds.sort(key=lambda t: (-t["pts"], -t["gd"], -t["gf"], t["team"]))
+    for t in thirds[:8]:
+        qualifiers.append(t["team"])
+    return qualifiers
+
+# ──────────────────────────────────────────────────────────────
 # ERGEBNISSE.XLSX SCHREIBEN
 # ──────────────────────────────────────────────────────────────
 def write_ergebnisse(gs_results, ko_results):
     # Vorhandene valide Ergebnisse laden und mit neuen mergen
     existing_gs = {}
-    existing_ko = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM"]}
+    existing_ko = {k: [] for k in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]}
     if ERGEBNISSE.exists():
         try:
             wb_old = openpyxl.load_workbook(ERGEBNISSE)
@@ -308,7 +364,7 @@ def write_ergebnisse(gs_results, ko_results):
                         import re as _re
                         if _re.match(r"^\d+:\d+$", str(score).strip()):
                             existing_gs[str(mid)] = str(score).strip()
-            for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+            for runde in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]:
                 if runde in wb_old.sheetnames:
                     teams = []
                     for row in wb_old[runde].iter_rows(min_row=2, values_only=True):
@@ -322,8 +378,13 @@ def write_ergebnisse(gs_results, ko_results):
     # Neue Ergebnisse über alte mergen (neue überschreiben alte)
     merged_gs = {**existing_gs, **gs_results}
     merged_ko = {}
-    for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]:
         merged_ko[runde] = ko_results.get(runde) if ko_results.get(runde) else existing_ko.get(runde, [])
+
+    # GQ automatisch berechnen aus den tatsächlichen Gruppenspiel-Ergebnissen
+    merged_ko["GQ"] = _calc_actual_qualifiers(merged_gs)
+    if merged_ko["GQ"]:
+        print(f"  GQ-Teams berechnet: {len(merged_ko['GQ'])}/32")
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -333,7 +394,7 @@ def write_ergebnisse(gs_results, ko_results):
         ws.append([m["id"], m["heim"], m["gast"], m["datum"],
                    merged_gs.get(m["id"], "")])
 
-    for runde in ["S16", "S8", "VF", "HF", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]:
         ws2 = wb.create_sheet(runde)
         ws2.append(["Slot", "Team"])
         for i, team in enumerate(merged_ko.get(runde, []), 1):
