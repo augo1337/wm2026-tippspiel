@@ -1193,7 +1193,14 @@ function renderDetails(){
           const rowLbl=rowLabels?rowLabels[i]:`${i+1}.`;
           return `<tr><td class="mi" style="white-space:nowrap;padding:5px 8px;min-width:80px;font-size:.78rem;color:#7a9bbe">${rowLbl}</td><td class="mi-t">${actual[i]||'–'}</td>${plCells}</tr>`;
         }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      const ptsPerHit={'S16':5,'S8':10,'VF':15,'HF':20,'F':20}[activeTab]||5;
+      const subs=norm.length>0?players.map(p=>{
+        const tipsLow=(Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]).map(t=>(t||'').toLowerCase());
+        const hits=tipsLow.filter(t=>t&&norm.includes(t)).length;
+        return `<td><b>${hits*ptsPerHit}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/${norm.length})</span></td>`;
+      }).join(''):'';
+      const tfoot=norm.length>0?`<tfoot><tr><td colspan="2" class="sub-lbl">${colHdr.split('(')[0].trim()} gesamt:</td>${subs}</tr></tfoot>`:'';
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">${colHdr}</th>${plHdrs}</tr></thead><tbody>${rows}</tbody>${tfoot}</table></div>`;
     }
   }
   cont.innerHTML=`<div class="gt-bar">${tabsHtml}</div><details class="leg-box"><summary>📋 Punktesystem</summary><div class="leg-inner"><div><span style="color:#a0c0de;font-weight:600">Gruppenphase: </span><span class="badge ex">⚽ Exakt +4</span> <span class="badge df">✓ Tordiff +3</span> <span class="badge td">≈ Tendenz +2</span> <span class="badge ms">✗ Daneben 0</span></div><div><span style="color:#a0c0de;font-weight:600">KO-Runden: </span>Gr.-Qual. (32 Teams) +3 · Achtelfinale (16 Teams) +5 · Viertelfinale (8 Teams) +10 · Halbfinale (4 Teams) +15 · Platz 3 (im Spiel +10, Sieger +15) · Finale +20/Team · Weltmeister +25</div></div></details>${tableHtml}`;
