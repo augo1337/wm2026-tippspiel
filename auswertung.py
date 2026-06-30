@@ -1380,16 +1380,28 @@ function renderChart(){
   if(!HISTORY||HISTORY.length<2)return;
   const el=document.getElementById('chartWrap');
   if(!el)return;
-  const labels=HISTORY.map(h=>h.ts);
+  // Nur die letzten 10 Tage anzeigen – eindeutige Tage extrahieren
+  const allDays=[...new Set(HISTORY.map(h=>h.ts.split(' ')[0]))];
+  const last10Days=allDays.slice(-10);
+  // Pro Tag nur den letzten Eintrag behalten
+  const filtered=last10Days.map(day=>{
+    const entries=HISTORY.filter(h=>h.ts.startsWith(day));
+    return entries[entries.length-1];
+  }).filter(Boolean);
+  // Nur einmalige Punkte-Änderungen zeigen (dünne History trotzdem vollständig)
+  const labels=filtered.map(h=>h.ts);
   const allNames=Object.keys(HISTORY[HISTORY.length-1].pts||{});
-  const colors=['#4fc3f7','#f5c518','#66bb6a','#ef5350','#ab47bc','#ffa726','#26c6da','#d4e157','#ec407a','#42a5f5','#26a69a','#ff7043'];
-  const datasets=allNames.map((name,i)=>({
+  // Rangfolge nach aktuellem Stand für Farbreihenfolge
+  const sortedNames=[...allNames].sort((a,b)=>(HISTORY[HISTORY.length-1].pts[b]||0)-(HISTORY[HISTORY.length-1].pts[a]||0));
+  const colors=['#f5c518','#c0c0c0','#cd7f32','#4fc3f7','#66bb6a','#ef5350','#ab47bc','#ffa726','#26c6da','#d4e157','#ec407a','#ff7043'];
+  const datasets=sortedNames.map((name,i)=>({
     label:name,
-    data:HISTORY.map(h=>h.pts[name]!==undefined?h.pts[name]:null),
+    data:filtered.map(h=>h.pts[name]!==undefined?h.pts[name]:null),
     borderColor:colors[i%colors.length],
     backgroundColor:colors[i%colors.length]+'22',
-    borderWidth:2,tension:.35,
-    pointRadius:HISTORY.length>30?1:3,
+    borderWidth:i<3?2.5:1.5,
+    tension:.35,
+    pointRadius:3,
     spanGaps:true
   }));
   el.innerHTML='<canvas id="ptChart"></canvas>';
@@ -1398,10 +1410,20 @@ function renderChart(){
     data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#a0c0de',font:{size:11}}}},
+      plugins:{
+        legend:{
+          labels:{color:'#a0c0de',font:{size:11}},
+          onClick:(e,item,legend)=>{
+            const ci=legend.chart;
+            const meta=ci.getDatasetMeta(item.datasetIndex);
+            meta.hidden=!meta.hidden;
+            ci.update();
+          }
+        }
+      },
       scales:{
-        x:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'}},
-        y:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'}}
+        x:{ticks:{color:'#546e7a',font:{size:10},maxRotation:30},grid:{color:'#1e3550'}},
+        y:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'},beginAtZero:false}
       }
     }
   });
