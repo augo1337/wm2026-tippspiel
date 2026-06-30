@@ -258,33 +258,49 @@ def parse_matches(api_events):
             print(f"  Warnung: Kein Score für {heim_de} vs {gast_de}")
             continue
 
-        # ── Gruppenphase ──
-        if "GROUP" in note or note == "":
-            match_id = gs_lookup.get((heim_de, gast_de))
+        # ── Gruppenphase oder KO? ──
+        # ESPN liefert bei KO-Spielen note="" – deshalb zuerst prüfen ob es ein bekanntes Gruppenspiel ist
+        match_id = gs_lookup.get((heim_de, gast_de))
+        is_group = match_id is not None or "GROUP" in note
+
+        if is_group:
             if match_id:
                 gs_results[match_id] = f"{int(h_score)}:{int(a_score)}"
             else:
                 unmatched.append(f"{heim_de} vs {gast_de}")
-
-        # ── KO-Runden ──
         else:
+            # KO-Runde: Sieger ermitteln
+            winner_obj = next((t for t in teams if t.get("winner") is True), None)
+            if not winner_obj:
+                # Fallback: höhere Score gewinnt (außer Elfmeter-Note)
+                if h_score > a_score:
+                    winner_obj = home
+                elif a_score > h_score:
+                    winner_obj = away
+            winner = to_de(winner_obj["team"]["displayName"]) if winner_obj else None
+
+            # Runde bestimmen: über note oder Datum
             runde = next((v for k, v in ESPN_KO_MAP.items() if k in note), None)
             if not runde:
-                continue
-            winner_flag = home.get("winner")
-            if winner_flag is True:
-                winner = heim_de
-            elif winner_flag is False:
-                winner = gast_de
-            else:
-                winner = None
+                # Datum-basierte Erkennung: S16=28.06-04.07, S8=04-07.07, VF=09-12.07, HF=14-15.07, F=19.07
+                event_date = event.get("date", "")[:10]  # "2026-06-28"
+                if "2026-06-28" <= event_date <= "2026-07-04":
+                    runde = "S16"
+                elif "2026-07-04" <= event_date <= "2026-07-07":
+                    runde = "S8"
+                elif "2026-07-09" <= event_date <= "2026-07-12":
+                    runde = "VF"
+                elif "2026-07-14" <= event_date <= "2026-07-15":
+                    runde = "HF"
+                elif event_date >= "2026-07-19":
+                    runde = "F"
 
-            if runde == "F":
-                ko_results["F"] = [heim_de, gast_de]
-                if winner:
+            if runde and winner:
+                if runde == "F":
+                    ko_results["F"] = [heim_de, gast_de]
                     ko_results["WM"] = [winner]
-            elif winner:
-                ko_results[runde].append(winner)
+                elif winner not in ko_results[runde]:
+                    ko_results[runde].append(winner)
 
     if unmatched:
         print(f"  Warnung: {len(unmatched)} Spiele nicht zugeordnet: {unmatched[:5]}")
@@ -431,8 +447,19 @@ def main():
             pass
     missing_results = len(GRUPPENSPIELE) - len(existing_gs)
 
-    # API abrufen wenn: Spiel im aktiven Zeitfenster ODER noch fehlende Ergebnisse
-    if not is_match_window() and missing_results == 0:
+    # S16-Status aus xlsx lesen (für KO-Phase Check)
+    existing_s16 = []
+    if ERGEBNISSE.exists():
+        try:
+            _wb3 = openpyxl.load_workbook(ERGEBNISSE)
+            if "S16" in _wb3.sheetnames:
+                existing_s16 = [r[1] for r in _wb3["S16"].iter_rows(min_row=2, values_only=True) if r[1]]
+        except Exception:
+            pass
+    ko_phase_active = missing_results == 0 and len(existing_s16) < 16
+
+    # API abrufen wenn: Spiel im aktiven Zeitfenster ODER fehlende Ergebnisse ODER KO-Phase läuft
+    if not is_match_window() and missing_results == 0 and not ko_phase_active:
         print("\nKein WM-Spiel im aktiven Zeitfenster und alle Ergebnisse vorhanden – überspringe API-Abruf.")
         # GQ trotzdem neu berechnen falls noch nicht vorhanden
         try:
