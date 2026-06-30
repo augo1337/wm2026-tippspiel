@@ -434,6 +434,25 @@ def main():
     # API abrufen wenn: Spiel im aktiven Zeitfenster ODER noch fehlende Ergebnisse
     if not is_match_window() and missing_results == 0:
         print("\nKein WM-Spiel im aktiven Zeitfenster und alle Ergebnisse vorhanden – überspringe API-Abruf.")
+        # GQ trotzdem neu berechnen falls noch nicht vorhanden
+        try:
+            _wb2 = openpyxl.load_workbook(ERGEBNISSE)
+            _gq_missing = "GQ" not in _wb2.sheetnames or sum(1 for _ in _wb2["GQ"].iter_rows(min_row=2)) == 0
+            if _gq_missing:
+                print("  GQ fehlt noch – berechne aus vorhandenen Ergebnissen ...")
+                gq_teams = _calc_actual_qualifiers(existing_gs)
+                if gq_teams:
+                    ws_gq = _wb2.create_sheet("GQ") if "GQ" not in _wb2.sheetnames else _wb2["GQ"]
+                    if "GQ" in _wb2.sheetnames and _wb2["GQ"].max_row > 1:
+                        pass  # bereits vorhanden
+                    else:
+                        ws_gq.append(["Slot", "Team"])
+                        for i, t in enumerate(gq_teams, 1):
+                            ws_gq.append([i, t])
+                        _wb2.save(ERGEBNISSE)
+                        print(f"  GQ-Teams gespeichert: {len(gq_teams)}/32")
+        except Exception as e:
+            print(f"  Hinweis GQ: {e}")
     else:
         if is_match_window():
             print("\nSpiel im aktiven Zeitfenster – hole Ergebnisse ...")
