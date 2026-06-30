@@ -197,7 +197,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
 <div class="hdr">
   <img class="hdr-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/1/17/2026_FIFA_World_Cup_emblem.svg/120px-2026_FIFA_World_Cup_emblem.svg.png" alt="WM 2026 Logo">
   <div><div class="hdr-title">WM 2026 Tippspiel</div>
-  <div class="hdr-sub">Stand: 30.06.2026 18:17 Uhr · 72/72 Gruppenspiele</div></div>
+  <div class="hdr-sub">Stand: 30.06.2026 18:27 Uhr · 72/72 Gruppenspiele</div></div>
 </div>
 </div>
 <div class="live-banner" id="liveBanner"><span class="live-dot"></span><span class="live-txt">LIVE:</span>&nbsp;<span class="live-match" id="liveMatch"></span></div>
@@ -239,7 +239,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#152438;color:#eef5f
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
 </div>
-<div class="foot">Generiert am 30.06.2026 18:17 Uhr · WM 2026 Tippspiel</div>
+<div class="foot">Generiert am 30.06.2026 18:27 Uhr · WM 2026 Tippspiel</div>
 <button class="fb-btn" onclick="document.getElementById('fbOverlay').classList.add('open')">💬 Feedback</button>
 <div id="pvModal" onclick="if(event.target===this)closePV()">
   <div class="pv-box">
@@ -356,6 +356,11 @@ function togglePlayerRow(name){
 }
 
 function findBestInitTab(){
+  // Nach Gruppenphase: automatisch auf AF (16) wechseln wenn S16-Teams bekannt
+  if(DATA.ko&&DATA.ko['S16']&&DATA.ko['S16'].length>0) return 'S16';
+  // Gruppenphase abgeschlossen (alle 72 Spiele): GQ anzeigen
+  const filled=DATA.players[0]&&DATA.players[0].spiele.filter(s=>s.ergebnis).length;
+  if(filled>=72) return 'GQ';
   return 'Gruppen';
 }
 let activeTab=findBestInitTab();
@@ -415,23 +420,29 @@ function renderDetails(){
     tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-grp"><thead><tr><th class="mh-l">Datum</th><th class="mh-l">Spiel</th><th>Erg.</th>${plHdrs}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" class="sub-lbl">Gruppenphase gesamt:</td>${subs}</tr></tfoot></table></div>`;
   } else if(activeTab==='GQ'){
     const gqActual=DATA.ko['GQ']||[];
+    const gqActualLow=gqActual.map(t=>t.toLowerCase());
+    const hasActual=gqActual.length>0;
     const allPredTeams=new Set();
     players.forEach(p=>(p.gq_teams||[]).forEach(t=>{if(t)allPredTeams.add(t)}));
-    const teamList=gqActual.length>0 ? gqActual : [...allPredTeams].sort((a,b)=>a.localeCompare(b,'de'));
-    const hasActual=gqActual.length>0;
+    const teamList=hasActual ? gqActual : [...allPredTeams].sort((a,b)=>a.localeCompare(b,'de'));
     const rows=teamList.length===0
-      ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Keine Tipps vorhanden</td></tr>`
+      ?`<tr><td colspan="${players.length+2}" style="text-align:center;padding:24px;color:#546e7a">Keine Daten</td></tr>`
       :teamList.map((team,i)=>{
+        const teamLow=team.toLowerCase();
         const plCells=players.map(p=>{
-          const pred=(p.gq_teams||[]);
-          const tipped=pred.includes(team);
-          const cls=hasActual?(tipped?'mcel-ex':'mcel-ms'):(tipped?'mcel-ex':'mcel-op');
-          return `<td class="mcel ${cls}">${tipped?team:'–'}</td>`;
+          const pred=(p.gq_teams||[]).map(t=>t.toLowerCase());
+          const tipped=pred.includes(teamLow);
+          if(!hasActual){
+            return `<td class="mcel ${tipped?'mcel-ex':'mcel-op'}">${tipped?'✓':'–'}</td>`;
+          }
+          const hit=tipped;
+          return `<td class="mcel ${hit?'mcel-ex':'mcel-ms'}">${hit?'✓':'✗'}</td>`;
         }).join('');
-        return `<tr><td class="mi" style="white-space:nowrap;padding:5px 8px;min-width:30px;font-size:.78rem;color:#7a9bbe">${i+1}.</td><td class="mi-t">${hasActual?team:'–'}</td>${plCells}</tr>`;
+        return `<tr><td class="mi" style="white-space:nowrap;padding:5px 8px;min-width:30px;font-size:.78rem;color:#7a9bbe">${i+1}.</td><td class="mi-t">${team}</td>${plCells}</tr>`;
       }).join('');
     const subs=players.map(p=>{
-      const hits=(p.gq_teams||[]).filter(t=>gqActual.includes(t)).length;
+      const predLow=(p.gq_teams||[]).map(t=>t.toLowerCase());
+      const hits=predLow.filter(t=>gqActualLow.includes(t)).length;
       const tipCount=(p.gq_teams||[]).length;
       return hasActual
         ?`<td><b>${hits*3}</b><span style="opacity:.5;font-size:.73rem;margin-left:4px">(${hits}/32)</span></td>`
