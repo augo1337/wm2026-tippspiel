@@ -1029,11 +1029,9 @@ function togglePlayerRow(name){
 }
 
 function findBestInitTab(){
-  // Nach Gruppenphase: automatisch auf AF (16) wechseln wenn S16-Teams bekannt
-  if(DATA.ko&&DATA.ko['S16']&&DATA.ko['S16'].length>0) return 'S16';
-  // Gruppenphase abgeschlossen (alle 72 Spiele): GQ anzeigen
+  // Nach Gruppenphase: immer AF (16) als Default zeigen
   const filled=DATA.players[0]&&DATA.players[0].spiele.filter(s=>s.ergebnis).length;
-  if(filled>=72) return 'GQ';
+  if(filled>=72) return 'S16';
   return 'Gruppen';
 }
 let activeTab=findBestInitTab();
