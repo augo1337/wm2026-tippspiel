@@ -1393,28 +1393,34 @@ function renderChart(){
   if(!HISTORY||HISTORY.length<2)return;
   const el=document.getElementById('chartWrap');
   if(!el)return;
-  // Nur die letzten 10 Tage anzeigen – eindeutige Tage extrahieren
+  // Letzten 10 Tage, ein Eintrag pro Tag
   const allDays=[...new Set(HISTORY.map(h=>h.ts.split(' ')[0]))];
   const last10Days=allDays.slice(-10);
-  // Pro Tag nur den letzten Eintrag behalten
   const filtered=last10Days.map(day=>{
     const entries=HISTORY.filter(h=>h.ts.startsWith(day));
     return entries[entries.length-1];
   }).filter(Boolean);
-  // Nur einmalige Punkte-Änderungen zeigen (dünne History trotzdem vollständig)
-  const labels=filtered.map(h=>h.ts);
+  const labels=filtered.map(h=>h.ts.split(' ')[0]);
   const allNames=Object.keys(HISTORY[HISTORY.length-1].pts||{});
-  // Rangfolge nach aktuellem Stand für Farbreihenfolge
-  const sortedNames=[...allNames].sort((a,b)=>(HISTORY[HISTORY.length-1].pts[b]||0)-(HISTORY[HISTORY.length-1].pts[a]||0));
+  // Rangfolge pro Snapshot berechnen
+  function getRank(snapshot,name){
+    const sorted=Object.entries(snapshot.pts||{}).sort((a,b)=>b[1]-a[1]);
+    const idx=sorted.findIndex(([n])=>n===name);
+    return idx>=0?idx+1:null;
+  }
+  // Sortierung nach aktuellem Rang
+  const lastSnap=filtered[filtered.length-1];
+  const sortedNames=[...allNames].sort((a,b)=>getRank(lastSnap,a)-getRank(lastSnap,b));
+  const n=sortedNames.length;
   const colors=['#f5c518','#c0c0c0','#cd7f32','#4fc3f7','#66bb6a','#ef5350','#ab47bc','#ffa726','#26c6da','#d4e157','#ec407a','#ff7043'];
   const datasets=sortedNames.map((name,i)=>({
     label:name,
-    data:filtered.map(h=>h.pts[name]!==undefined?h.pts[name]:null),
+    data:filtered.map(h=>getRank(h,name)),
     borderColor:colors[i%colors.length],
-    backgroundColor:colors[i%colors.length]+'22',
+    backgroundColor:colors[i%colors.length]+'33',
     borderWidth:i<3?2.5:1.5,
-    tension:.35,
-    pointRadius:3,
+    tension:.3,
+    pointRadius:4,
     spanGaps:true
   }));
   el.innerHTML='<canvas id="ptChart"></canvas>';
@@ -1424,19 +1430,29 @@ function renderChart(){
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{
-        legend:{
-          labels:{color:'#a0c0de',font:{size:11}},
-          onClick:(e,item,legend)=>{
-            const ci=legend.chart;
-            const meta=ci.getDatasetMeta(item.datasetIndex);
-            meta.hidden=!meta.hidden;
-            ci.update();
+        legend:{labels:{color:'#a0c0de',font:{size:11}}},
+        tooltip:{
+          callbacks:{
+            label:ctx=>{
+              const snap=filtered[ctx.dataIndex];
+              const pts=snap&&snap.pts[ctx.dataset.label];
+              return `${ctx.dataset.label}: Platz ${ctx.parsed.y} (${pts} Pkt)`;
+            }
           }
         }
       },
       scales:{
-        x:{ticks:{color:'#546e7a',font:{size:10},maxRotation:30},grid:{color:'#1e3550'}},
-        y:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'},beginAtZero:false}
+        x:{ticks:{color:'#546e7a',font:{size:10}},grid:{color:'#1e3550'}},
+        y:{
+          reverse:true,
+          min:1,max:n,
+          ticks:{
+            color:'#546e7a',font:{size:10},
+            stepSize:1,
+            callback:v=>`Platz ${v}`
+          },
+          grid:{color:'#1e3550'}
+        }
       }
     }
   });
@@ -1499,7 +1515,7 @@ setInterval(checkLiveMatch,60000);
     </table>
   </div>
 </div>
-<div class="chart-section"><div class="chart-wrap"><div class="chart-title">Punkteverlauf</div><div id="chartWrap" style="height:260px;position:relative"></div></div></div>
+<div class="chart-section"><div class="chart-wrap"><div class="chart-title">Rangverlauf (letzten 10 Tage)</div><div id="chartWrap" style="height:260px;position:relative"></div></div></div>
 <div class="section">
   <div class="sec-title">Detailauswertung</div>
   <div id="detailContainer"></div>
