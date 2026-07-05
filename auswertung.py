@@ -1029,10 +1029,16 @@ function togglePlayerRow(name){
 }
 
 function findBestInitTab(){
-  // Nach Gruppenphase: immer AF (16) als Default zeigen
+  // Intelligenter Default: aktuellste laufende KO-Runde anzeigen
   const filled=DATA.players[0]&&DATA.players[0].spiele.filter(s=>s.ergebnis).length;
-  if(filled>=72) return 'S16';
-  return 'Gruppen';
+  if(filled<72) return 'Gruppen';
+  const ko=DATA.ko||{};
+  // Zeige die aktuellste Runde mit Daten aber noch nicht vollständig
+  if((ko['HF']||[]).length>0) return 'HF';
+  if((ko['VF']||[]).length>0) return 'VF';
+  if((ko['S8']||[]).length>0) return 'S8';
+  if((ko['S16']||[]).length>0) return 'S16';
+  return 'GQ';
 }
 let activeTab=findBestInitTab();
 

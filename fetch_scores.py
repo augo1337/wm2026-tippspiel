@@ -282,9 +282,14 @@ def parse_matches(api_events):
             # Runde bestimmen: über note oder Datum
             runde = next((v for k, v in ESPN_KO_MAP.items() if k in note), None)
             if not runde:
-                # Datum-basierte Erkennung: S16=28.06-04.07, S8=04-07.07, VF=09-12.07, HF=14-15.07, F=19.07
+                # Datum-basierte Erkennung (WM 2026 Spielplan)
+                # S16 (Sechzehntelfinale): 28.06–03.07
+                # S8  (Achtelfinale):      04.07–07.07
+                # VF  (Viertelfinale):     09.07–12.07
+                # HF  (Halbfinale):        14.07–15.07
+                # F   (Finale):            19.07
                 event_date = event.get("date", "")[:10]  # "2026-06-28"
-                if "2026-06-28" <= event_date <= "2026-07-04":
+                if "2026-06-28" <= event_date <= "2026-07-03":
                     runde = "S16"
                 elif "2026-07-04" <= event_date <= "2026-07-07":
                     runde = "S8"
@@ -447,16 +452,20 @@ def main():
             pass
     missing_results = len(GRUPPENSPIELE) - len(existing_gs)
 
-    # S16-Status aus xlsx lesen (für KO-Phase Check)
-    existing_s16 = []
-    if ERGEBNISSE.exists():
+    # KO-Phase Check: solange nicht alle Runden bis zum Finale bekannt sind
+    ko_phase_active = False
+    if missing_results == 0 and ERGEBNISSE.exists():
         try:
             _wb3 = openpyxl.load_workbook(ERGEBNISSE)
-            if "S16" in _wb3.sheetnames:
-                existing_s16 = [r[1] for r in _wb3["S16"].iter_rows(min_row=2, values_only=True) if r[1]]
+            s16_count = sum(1 for r in _wb3["S16"].iter_rows(min_row=2, values_only=True) if r[1]) if "S16" in _wb3.sheetnames else 0
+            s8_count  = sum(1 for r in _wb3["S8"].iter_rows(min_row=2, values_only=True)  if r[1]) if "S8"  in _wb3.sheetnames else 0
+            vf_count  = sum(1 for r in _wb3["VF"].iter_rows(min_row=2, values_only=True)  if r[1]) if "VF"  in _wb3.sheetnames else 0
+            hf_count  = sum(1 for r in _wb3["HF"].iter_rows(min_row=2, values_only=True)  if r[1]) if "HF"  in _wb3.sheetnames else 0
+            wm_count  = sum(1 for r in _wb3["WM"].iter_rows(min_row=2, values_only=True)  if r[1]) if "WM"  in _wb3.sheetnames else 0
+            ko_phase_active = s16_count < 16 or s8_count < 8 or vf_count < 4 or hf_count < 2 or wm_count < 1
+            print(f"  KO-Stand: S16={s16_count}/16, S8={s8_count}/8, VF={vf_count}/4, HF={hf_count}/2, WM={wm_count}/1")
         except Exception:
             pass
-    ko_phase_active = missing_results == 0 and len(existing_s16) < 16
 
     # API abrufen wenn: Spiel im aktiven Zeitfenster ODER fehlende Ergebnisse ODER KO-Phase läuft
     if not is_match_window() and missing_results == 0 and not ko_phase_active:
