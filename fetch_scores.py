@@ -289,9 +289,16 @@ def parse_matches(api_events):
                 # HF  (Halbfinale):        14.07–15.07
                 # F   (Finale):            19.07
                 event_date = event.get("date", "")[:10]  # "2026-06-28"
-                if "2026-06-28" <= event_date <= "2026-07-03":
+                # Datum-basierte Erkennung (WM 2026 Spielplan)
+                # S16 endet 04.07 morgens (Kolumbien 01:30Z), S8 beginnt 04.07 nachmittags (17:00Z)
+                event_datetime = event.get("date", "")[:16]  # "2026-07-04T01:30"
+                event_date = event_datetime[:10]
+                event_hour = int(event_datetime[11:13]) if len(event_datetime) >= 13 else 12
+                is_early_july4 = event_date == "2026-07-04" and event_hour < 12
+                if ("2026-06-28" <= event_date <= "2026-07-03") or is_early_july4:
                     runde = "S16"
                 elif "2026-07-04" <= event_date <= "2026-07-07":
+                    runde = "S8"
                     runde = "S8"
                 elif "2026-07-09" <= event_date <= "2026-07-12":
                     runde = "VF"
