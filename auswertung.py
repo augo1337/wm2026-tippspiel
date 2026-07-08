@@ -1036,6 +1036,8 @@ function findBestInitTab(){
   // Zeige die aktuellste Runde mit Daten aber noch nicht vollständig
   if((ko['HF']||[]).length>0) return 'HF';
   if((ko['VF']||[]).length>0) return 'VF';
+  // S8 voll (8 Teams) → wechsle zu VF (Viertelfinale beginnt)
+  if((ko['S8']||[]).length>=8) return 'VF';
   if((ko['S8']||[]).length>0) return 'S8';
   if((ko['S16']||[]).length>0) return 'S16';
   return 'GQ';
