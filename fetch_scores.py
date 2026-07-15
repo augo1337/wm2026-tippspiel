@@ -426,6 +426,18 @@ def write_ergebnisse(gs_results, ko_results):
     if merged_ko["GQ"]:
         print(f"  GQ-Teams berechnet: {len(merged_ko['GQ'])}/32")
 
+    # Finalisten aus HF-Siegern ableiten wenn F noch leer
+    hf_teams = merged_ko.get("HF", [])
+    if hf_teams and not merged_ko.get("F"):
+        merged_ko["F"] = hf_teams[:]  # HF-Sieger = Finalisten
+
+    # P3-Teilnehmer aus HF-Verlierern ableiten
+    # Dazu brauchen wir die HF-Paarungen – wir merken uns Verlierer aus dem parse
+    p3_parts = merged_ko.get("P3_participants", [])
+    if p3_parts and not merged_ko.get("P3"):
+        # P3 = [Teilnehmer1, Teilnehmer2] – noch kein Sieger bekannt
+        merged_ko["P3"] = p3_parts[:]
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Gruppenphase"
