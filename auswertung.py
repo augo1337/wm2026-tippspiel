@@ -271,12 +271,11 @@ def read_ergebnisse(path):
 
     # KO-Runden
     ko_results = {}
-    for runde in ["GQ", "S16", "S8", "VF", "HF", "P3", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "P3", "P3_participants", "F", "WM"]:
         if runde in wb.sheetnames:
             sheet = wb[runde]
             teams = []
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                # Column A = slot number, Column B = team name
                 val = row[1] if len(row) > 1 else row[0]
                 if val:
                     teams.append(str(val).strip())
@@ -1029,14 +1028,12 @@ function togglePlayerRow(name){
 }
 
 function findBestInitTab(){
-  // Intelligenter Default: aktuellste laufende KO-Runde anzeigen
   const filled=DATA.players[0]&&DATA.players[0].spiele.filter(s=>s.ergebnis).length;
   if(filled<72) return 'Gruppen';
   const ko=DATA.ko||{};
-  // Zeige die aktuellste Runde mit Daten aber noch nicht vollständig
-  if((ko['HF']||[]).length>0) return 'HF';
+  // Finale wenn mindestens ein Finalist bekannt (HF >= 1)
+  if((ko['HF']||[]).length>=1) return 'F';
   if((ko['VF']||[]).length>0) return 'VF';
-  // S8 voll (8 Teams) → wechsle zu VF (Viertelfinale beginnt)
   if((ko['S8']||[]).length>=8) return 'VF';
   if((ko['S8']||[]).length>0) return 'S8';
   if((ko['S16']||[]).length>0) return 'S16';

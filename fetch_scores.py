@@ -224,7 +224,7 @@ def parse_matches(api_events):
 
     gs_results = {}
     gs_live = {}   # laufende Spiele: match_id → "1:0 (67')"
-    ko_results = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM"]}
+    ko_results = {k: [] for k in ["S16", "S8", "VF", "HF", "F", "WM", "P3", "P3_participants"]}
     unmatched = []
 
     for event in api_events:
@@ -299,11 +299,12 @@ def parse_matches(api_events):
                     runde = "S16"
                 elif "2026-07-04" <= event_date <= "2026-07-07":
                     runde = "S8"
-                    runde = "S8"
                 elif "2026-07-09" <= event_date <= "2026-07-12":
                     runde = "VF"
                 elif "2026-07-14" <= event_date <= "2026-07-15":
                     runde = "HF"
+                elif event_date == "2026-07-18":
+                    runde = "P3"
                 elif event_date >= "2026-07-19":
                     runde = "F"
 
@@ -311,8 +312,19 @@ def parse_matches(api_events):
                 if runde == "F":
                     ko_results["F"] = [heim_de, gast_de]
                     ko_results["WM"] = [winner]
+                elif runde == "P3":
+                    # Beide Teilnehmer und Sieger speichern
+                    ko_results["P3"] = [heim_de, gast_de, winner]
                 elif winner not in ko_results[runde]:
                     ko_results[runde].append(winner)
+
+            # HF-Verlierer als P3-Teilnehmer sammeln (beide HF-Spiele müssen gespielt sein)
+            if runde == "HF" and winner:
+                loser = gast_de if winner == heim_de else heim_de
+                if not ko_results.get("P3_participants"):
+                    ko_results["P3_participants"] = []
+                if loser not in ko_results["P3_participants"]:
+                    ko_results["P3_participants"].append(loser)
 
     if unmatched:
         print(f"  Warnung: {len(unmatched)} Spiele nicht zugeordnet: {unmatched[:5]}")
@@ -406,7 +418,7 @@ def write_ergebnisse(gs_results, ko_results):
     # Neue Ergebnisse über alte mergen (neue überschreiben alte)
     merged_gs = {**existing_gs, **gs_results}
     merged_ko = {}
-    for runde in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "P3", "P3_participants", "F", "WM"]:
         merged_ko[runde] = ko_results.get(runde) if ko_results.get(runde) else existing_ko.get(runde, [])
 
     # GQ automatisch berechnen aus den tatsächlichen Gruppenspiel-Ergebnissen
@@ -422,7 +434,7 @@ def write_ergebnisse(gs_results, ko_results):
         ws.append([m["id"], m["heim"], m["gast"], m["datum"],
                    merged_gs.get(m["id"], "")])
 
-    for runde in ["GQ", "S16", "S8", "VF", "HF", "F", "WM"]:
+    for runde in ["GQ", "S16", "S8", "VF", "HF", "P3", "P3_participants", "F", "WM"]:
         ws2 = wb.create_sheet(runde)
         ws2.append(["Slot", "Team"])
         for i, team in enumerate(merged_ko.get(runde, []), 1):
