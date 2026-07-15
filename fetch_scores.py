@@ -432,11 +432,11 @@ def write_ergebnisse(gs_results, ko_results):
         merged_ko["F"] = hf_teams[:]  # HF-Sieger = Finalisten
 
     # P3-Teilnehmer aus HF-Verlierern ableiten
-    # Dazu brauchen wir die HF-Paarungen – wir merken uns Verlierer aus dem parse
+    # P3_participants = beide HF-Verlierer (für Anzeige)
+    # P3 = nur der echte Sieger (erst nach Spiel um Platz 3)
     p3_parts = merged_ko.get("P3_participants", [])
-    if p3_parts and not merged_ko.get("P3"):
-        # P3 = [Teilnehmer1, Teilnehmer2] – noch kein Sieger bekannt
-        merged_ko["P3"] = p3_parts[:]
+    # P3 nur setzen wenn es ein echtes Ergebnis des P3-Spiels gibt (nicht aus HF ableiten)
+    # merged_ko["P3"] bleibt wie vom parse_matches/existing_ko gesetzt
 
     wb = openpyxl.Workbook()
     ws = wb.active

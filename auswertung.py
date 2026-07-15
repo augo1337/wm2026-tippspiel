@@ -1137,10 +1137,14 @@ function renderDetails(){
       }).join('');
       tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
     } else if(activeTab==='P3'){
+      // P3_participants = HF-Verlierer (Teilnehmer am Spiel um Platz 3)
+      // P3 = echter Sieger (erst nach dem Spiel um Platz 3)
       const p3parts=(DATA.ko_display&&DATA.ko_display['P3_participants'])||[];
       const p3t1=p3parts[0]||'–';
       const p3t2=p3parts[1]||'–';
-      const winnerActual=(DATA.ko_display&&DATA.ko_display['P3']&&DATA.ko_display['P3'][0])||'–';
+      // Sieger nur aus echtem P3-Spiel (nicht aus Teilnehmern)
+      const p3Winner=(DATA.ko_display&&DATA.ko_display['P3']||[]);
+      const winnerActual=p3Winner.length===1?p3Winner[0]:'–';  // nur wenn genau 1 = echter Sieger
       const winnerNorm=winnerActual!=='–'?winnerActual.toLowerCase():'';
       const p3t1Norm=p3t1!=='–'?p3t1.toLowerCase():'';
       const p3t2Norm=p3t2!=='–'?p3t2.toLowerCase():'';
@@ -1178,7 +1182,19 @@ function renderDetails(){
         return `<td class="mcel ${cls}">${tip}</td>`;
       }).join('');
       const rowSieger=`<tr><td class="mi" style="color:#7a9bbe;font-size:.78rem;padding:5px 8px">Sieger-Tipp</td><td class="mi-t">${winnerActual}</td>${siegerCells}</tr>`;
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">Platz 3 (Teilnehmer +10, Sieger +15)</th>${plHdrs}</tr></thead><tbody>${rowP3part1}${rowP3part2}${rowSieger}</tbody></table></div>`;
+      // Scoring-Zeile: +10 für Teilnahme, +15 für Sieger (aus calc_p3_pts Logik)
+      const p3Subs=players.map(p=>{
+        const tip=(p.ko_tipps['P3']||'').toLowerCase();
+        const t1Low=p3t1.toLowerCase(), t2Low=p3t2.toLowerCase();
+        const wLow=winnerActual!=='–'?winnerActual.toLowerCase():'';
+        const isParticipant=tip&&(tip===t1Low||tip===t2Low);
+        const isWinner=wLow&&tip===wLow;
+        const pts=isWinner?25:isParticipant?10:0;
+        const known=(p3t1!=='–'||p3t2!=='–');
+        return known?`<td><b>${pts}</b></td>`:`<td>–</td>`;
+      }).join('');
+      const p3Tfoot=`<tfoot><tr><td colspan="2" class="sub-lbl">Platz 3 gesamt:</td>${p3Subs}</tr></tfoot>`;
+      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th style="min-width:80px;text-align:left;padding-left:8px"></th><th class="mh-l">Platz 3 (Teilnehmer +10, Sieger +15)</th>${plHdrs}</tr></thead><tbody>${rowP3part1}${rowP3part2}${rowSieger}</tbody>${p3Tfoot}</table></div>`;
     } else {
       const tips=players.map(p=>Array.isArray(p.ko_tipps[activeTab])?p.ko_tipps[activeTab]:[]);
       const maxLen=Math.max(...tips.map(t=>t.length),0);
