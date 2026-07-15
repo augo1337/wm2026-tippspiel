@@ -691,10 +691,13 @@ def write_html_rangliste(rows, gs_results, ko_results, out_path, gs_live=None):
         k: [str(t).strip() for t in v if t and str(t).strip()]
         for k, v in ko_results.items()
     }
-    # P3-Teilnehmer = HF-Verlierer (alle HF-Teams minus Finalisten)
-    hf_teams = [str(t).strip() for t in ko_results.get("HF", []) if t and str(t).strip()]
-    f_teams  = [str(t).strip() for t in ko_results.get("F",  []) if t and str(t).strip()]
-    p3_participants = [t for t in hf_teams if t not in f_teams][:2]
+    # P3-Teilnehmer: direkt aus ko_results["P3_participants"] (HF-Verlierer)
+    # Fallback: HF-Teams minus Finalisten (für Rückwärtskompatibilität)
+    p3_participants = [str(t).strip() for t in ko_results.get("P3_participants", []) if t and str(t).strip()]
+    if not p3_participants:
+        hf_teams = [str(t).strip() for t in ko_results.get("HF", []) if t and str(t).strip()]
+        f_teams  = [str(t).strip() for t in ko_results.get("F",  []) if t and str(t).strip()]
+        p3_participants = [t for t in hf_teams if t not in f_teams][:2]
     ko_res_display["P3_participants"] = p3_participants
 
     filled  = sum(1 for v in gs_results.values() if v)
