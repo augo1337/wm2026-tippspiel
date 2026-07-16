@@ -426,10 +426,12 @@ def write_ergebnisse(gs_results, ko_results):
     if merged_ko["GQ"]:
         print(f"  GQ-Teams berechnet: {len(merged_ko['GQ'])}/32")
 
-    # Finalisten aus HF-Siegern ableiten wenn F noch leer
+    # Finalisten aus HF-Siegern ableiten wenn HF voll (2 Sieger bekannt)
     hf_teams = merged_ko.get("HF", [])
-    if hf_teams and not merged_ko.get("F"):
-        merged_ko["F"] = hf_teams[:]  # HF-Sieger = Finalisten
+    if len(hf_teams) >= 2 and len(merged_ko.get("F", [])) < 2:
+        merged_ko["F"] = hf_teams[:2]  # beide HF-Sieger = Finalisten
+    elif len(hf_teams) == 1 and not merged_ko.get("F"):
+        merged_ko["F"] = hf_teams[:]   # erster Finalist bekannt
 
     # P3-Teilnehmer aus HF-Verlierern ableiten
     # P3_participants = beide HF-Verlierer (für Anzeige)
