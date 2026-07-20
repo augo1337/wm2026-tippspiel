@@ -1,12 +1,7 @@
 name: WM 2026 Score Update
 
 on:
-  schedule:
-    # Alle 15 min während der WM-Gruppenphase (11.–30. Juni) [v2]
-    - cron: '*/15 * 11-30 6 *'
-    # Alle 15 min während der WM-KO-Phase (1.–19. Juli) [v2]
-    - cron: '*/15 * 1-19 7 *'
-  workflow_dispatch:  # Manueller Start jederzeit möglich
+  workflow_dispatch:  # Nur noch manueller Start (WM beendet)
 
 permissions:
   contents: write

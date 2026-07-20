@@ -1034,6 +1034,8 @@ function findBestInitTab(){
   const filled=DATA.players[0]&&DATA.players[0].spiele.filter(s=>s.ergebnis).length;
   if(filled<72) return 'Gruppen';
   const ko=DATA.ko||{};
+  // WM bekannt → WM-Tab
+  if((ko['WM']||[]).length>0) return 'WM';
   // Finale wenn mindestens ein Finalist bekannt (HF >= 1)
   if((ko['HF']||[]).length>=1) return 'F';
   if((ko['VF']||[]).length>0) return 'VF';
@@ -1132,13 +1134,17 @@ function renderDetails(){
     const actual=DATA.ko[activeTab]||[];
     const norm=actual.map(t=>(t||'').toLowerCase());
     if(activeTab==='WM'){
+      const wm=actual[0]||null;
+      const wmHdr=wm
+        ?`<div style="text-align:center;padding:18px 0 10px"><span style="font-size:2.5rem">🏆</span><br><span style="font-size:1.6rem;font-weight:800;color:#f5c518">${wm}</span><br><span style="font-size:.82rem;color:#a0c0de;margin-top:4px;display:block">Weltmeister 2026</span></div>`
+        :`<div style="text-align:center;padding:18px 0 10px;color:#546e7a">Weltmeister noch nicht bekannt</div>`;
       const plCells=players.map(p=>{
         const tip=p.ko_tipps['WM']||'–';
         const hit=norm.length>0&&tip.toLowerCase()===norm[0];
         const miss=norm.length>0&&!hit;
-        return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}">${tip}</td>`;
+        return `<td class="mcel ${hit?'mcel-ex':miss?'mcel-ms':'mcel-op'}" style="${hit?'font-weight:800;font-size:1rem':''}">${hit?'🏆 ':''} ${tip}</td>`;
       }).join('');
-      tableHtml=`<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t">${actual[0]||'–'}</td>${plCells}</tr></tbody></table></div>`;
+      tableHtml=`${wmHdr}<div class="mtx-wrap"><table class="mtx mtx-ko"><thead><tr><th class="mh-l">Weltmeister-Tipp (je +25 Pkt)</th>${plHdrs}</tr></thead><tbody><tr><td class="mi-t" style="font-weight:700;color:#f5c518">${wm||'–'}</td>${plCells}</tr></tbody></table></div>`;
     } else if(activeTab==='P3'){
       // P3_participants = HF-Verlierer (Teilnehmer am Spiel um Platz 3)
       // P3 = echter Sieger (erst nach dem Spiel um Platz 3)

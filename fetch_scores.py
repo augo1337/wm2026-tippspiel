@@ -313,8 +313,8 @@ def parse_matches(api_events):
                     ko_results["F"] = [heim_de, gast_de]
                     ko_results["WM"] = [winner]
                 elif runde == "P3":
-                    # Beide Teilnehmer und Sieger speichern
-                    ko_results["P3"] = [heim_de, gast_de, winner]
+                    # Nur Sieger speichern, Teilnehmer kommen aus P3_participants
+                    ko_results["P3"] = [winner]
                 elif winner not in ko_results[runde]:
                     ko_results[runde].append(winner)
 
